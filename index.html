@@ -1,1492 +1,910 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEIS AI - Enhanced Data Integration</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg: #0b0f14;
-            --bg-soft: #121821;
-            --card: #0f1520;
-            --text: #e9edf3;
-            --muted: #9ba7b4;
-            --brand: #12d6df;
-            --accent: #ffd15c;
-            --ok: #1ec28b;
-            --warn: #ffb020;
-            --risk: #ff5c5c;
-            --stroke: #1f2a38;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-            --radius: 14px;
-            --radius-sm: 10px;
-            --maxw: 1200px;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SEIS AI — Rockfall Prediction & Alerts for Open‑Pit Mines</title>
+  <meta name="description" content="Predict rockfalls before they happen. SEIS AI provides early warnings, geotechnical insights, and real-time risk mapping for open-pit mines." />
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(180deg, var(--bg), #0c1016 30%, var(--bg-soft));
-            color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
-        }
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+  
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        .container {
-            max-width: var(--maxw);
-            margin: 0 auto;
-        }
+  <style>
+    :root{
+      --bg:#0b0f14;            /* charcoal */
+      --bg-soft:#121821;       /* deep slate */
+      --card:#0f1520;
+      --text:#e9edf3;          /* near-white */
+      --muted:#9ba7b4;
+      --brand:#12d6df;         /* teal/cyan */
+      --accent:#ffd15c;        /* safety amber */
+      --ok:#1ec28b;            /* green */
+      --warn:#ffb020;          /* amber */
+      --risk:#ff5c5c;          /* red */
+      --stroke:#1f2a38;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --maxw: 1200px;
+    }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--stroke);
-        }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg,var(--bg),#0c1016 30%,var(--bg-soft));
+      color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      line-height:1.55;
+    }
+    a{color:var(--brand); text-decoration:none}
+    a:hover{opacity:.9}
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+    /* Header */
+    .nav{
+      position:sticky; top:0; z-index:1000; backdrop-filter: blur(10px);
+      background:linear-gradient(180deg,rgba(11,15,20,.9),rgba(11,15,20,.6));
+      border-bottom:1px solid var(--stroke);
+    }
+    .nav-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      max-width:var(--maxw); margin:0 auto; padding:14px 20px;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:36px; height:36px; border-radius:10px;
+      background: radial-gradient(120% 120% at 20% 20%, var(--brand), #0cf, #035);
+      box-shadow: 0 6px 18px rgba(18,214,223,.35), inset 0 0 20px rgba(255,255,255,.08);
+    }
+    .brand h1{font-family:"Space Grotesk",Inter,sans-serif; font-size:18px; letter-spacing:.3px; margin:0}
+    .nav-links{display:flex; gap:18px; align-items:center}
+    .nav-links a{color:var(--muted); font-weight:600; font-size:14px}
+    .btn{
+      display:inline-grid; place-items:center; height:40px; padding:0 14px; border-radius:10px; font-weight:700; letter-spacing:.3px;
+      border:1px solid var(--stroke); color:var(--text); background:linear-gradient(180deg,#111824,#0c121c);
+      box-shadow: var(--shadow);
+    }
+    .btn-primary{
+      background:linear-gradient(180deg,var(--brand),#0fb7bf);
+      color:#001518; border-color:transparent;
+      box-shadow: 0 6px 24px rgba(18,214,223,.45);
+    }
 
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: radial-gradient(120% 120% at 20% 20%, var(--brand), #0cf, #035);
-            box-shadow: 0 6px 18px rgba(18, 214, 223, 0.35), inset 0 0 20px rgba(255, 255, 255, 0.08);
-        }
+    /* Hero */
+    .hero{
+      position:relative; overflow:hidden; border-bottom:1px solid var(--stroke);
+      background:
+        radial-gradient(1200px 500px at 50% -10%, rgba(18,214,223,.15), transparent 60%),
+        radial-gradient(800px 300px at 70% 10%, rgba(255,209,92,.10), transparent 60%);
+    }
+    .hero-inner{max-width:var(--maxw); margin:0 auto; padding:80px 20px 40px}
+    .eyebrow{display:inline-flex; align-items:center; gap:8px; color:var(--brand); font-weight:800; font-size:12px; letter-spacing:.2em; text-transform:uppercase}
+    .hero h2{
+      font-family:"Space Grotesk",Inter,sans-serif; font-size:48px; line-height:1.05; margin:14px 0 16px;
+    }
+    .hero p{color:var(--muted); font-size:18px; max-width:740px}
+    .hero-ctas{display:flex; gap:12px; margin-top:20px; flex-wrap:wrap}
+    .trust{display:flex; gap:20px; align-items:center; margin-top:28px; color:var(--muted); font-size:13px}
+    .trust .dot{width:8px; height:8px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px var(--ok)}
+    .hero-cards{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:38px;
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--stroke); border-radius:var(--radius); padding:18px;
+    }
+    .card h3{margin:4px 0 6px; font-size:16px}
+    .metric{font-weight:800; font-size:26px}
+    .metric.ok{color:var(--ok)} .metric.warn{color:var(--warn)} .metric.risk{color:var(--risk)}
 
-        .logo-text {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--brand);
-        }
+    /* Map section */
+    .section{max-width:var(--maxw); margin:0 auto; padding:60px 20px}
+    .section h3{font-family:"Space Grotesk"; font-size:28px; margin:0 0 10px}
+    .section p{color:var(--muted)}
+    .map-wrap{
+      margin-top:20px; background:var(--card); border:1px solid var(--stroke); border-radius:var(--radius);
+      overflow:hidden; box-shadow:var(--shadow);
+    }
+    .map-toolbar{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      padding:12px; border-bottom:1px solid var(--stroke); background:linear-gradient(180deg,#0e1521,#0b111a);
+    }
+    .filters{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .chip{
+      display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; border:1px solid var(--stroke);
+      background:#0b111a; color:var(--text); font-size:13px; cursor:pointer;
+    }
+    .chip input{accent-color:var(--brand)}
+    .select{
+      background:#0c121b; border:1px solid var(--stroke); color:var(--text); border-radius:10px; padding:8px 10px; font-size:13px
+    }
+    #map{height:540px; width:100%}
+    .legend{
+      position:absolute; right:16px; bottom:16px; background:#0b111a; border:1px solid var(--stroke); border-radius:12px; padding:10px 12px; color:var(--muted);
+      box-shadow:var(--shadow); font-size:12px
+    }
+    .legend .row{display:flex; gap:8px; align-items:center; margin:6px 0}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.risk{background:var(--risk)}
+    .dot.unknown{background:#8092a6}
+    .map-panel{
+      position:absolute; left:16px; bottom:16px; width:360px; max-width:86vw; background:#0b111a; border:1px solid var(--stroke); border-radius:12px;
+      padding:14px; color:var(--text); box-shadow:var(--shadow); display:none;
+    }
+    .map-panel h4{margin:0 0 6px}
+    .map-panel small{color:var(--muted)}
+    
+    /* Risk history chart */
+    .risk-chart {
+      margin-top: 12px;
+      height: 120px;
+      width: 100%;
+    }
 
-        h1 {
-            font-size: 32px;
-            margin-bottom: 20px;
-            color: var(--text);
-        }
+    /* Features */
+    .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+    .feature{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px solid var(--stroke); border-radius:var(--radius); padding:20px}
+    .feature h4{margin:0 0 6px}
+    .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:12px; background:#0c151f; border:1px solid var(--stroke); color:var(--muted)}
 
-        h2 {
-            font-size: 24px;
-            margin: 30px 0 15px;
-            color: var(--text);
-        }
+    /* Testimonials */
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+    .quote{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px solid var(--stroke); border-radius:var(--radius); padding:18px}
+    blockquote{margin:0; color:#d9e3ef; font-size:16px}
 
-        h3 {
-            font-size: 18px;
-            margin: 20px 0 10px;
-            color: var(--text);
-        }
+    /* CTA band */
+    .cta{
+      margin:60px auto; max-width:var(--maxw); background:
+        radial-gradient(600px 200px at 80% 20%, rgba(18,214,223,.15), transparent 60%),
+        linear-gradient(180deg,#0c151f,#0d141e);
+      border:1px solid var(--stroke); border-radius:var(--radius);
+      padding:26px 20px;
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+    }
+    .cta h4{margin:0; font-size:22px}
+    .cta p{margin:0; color:var(--muted)}
 
-        .card {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
-            border: 1px solid var(--stroke);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-        }
+    /* Footer */
+    footer{border-top:1px solid var(--stroke); padding:24px 20px; color:var(--muted)}
+    .foot{max-width:var(--maxw); margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px}
 
-        .api-controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+    /* Loading spinner */
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      border-top-color: var(--brand);
+      animation: spin 1s ease-in-out infinite;
+      display: inline-block;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            text-decoration: none;
-            border: 1px solid var(--stroke);
-            background: linear-gradient(180deg, #111824, #0c121c);
-            color: var(--text);
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 2000;
+    }
+    .modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card);
+      padding: 30px;
+      border-radius: var(--radius);
+      width: 90%;
+      max-width: 400px;
+      border: 1px solid var(--stroke);
+    }
+    .modal h3 {
+      margin-top: 0;
+      color: var(--text);
+    }
+    .modal input {
+      width: 100%;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--stroke);
+      background: var(--bg-soft);
+      color: var(--text);
+      margin-bottom: 15px;
+    }
+    .modal label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+    }
 
-        .btn-primary {
-            background: linear-gradient(180deg, var(--brand), #0fb7bf);
-            color: #001518;
-            border-color: transparent;
-            box-shadow: 0 6px 24px rgba(18, 214, 223, 0.45);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-        }
-
-        .data-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .data-section {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .data-container {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: 20px;
-            height: 400px;
-            overflow-y: auto;
-        }
-
-        .data-item {
-            padding: 12px;
-            border-bottom: 1px solid var(--stroke);
-        }
-
-        .data-item:last-child {
-            border-bottom: none;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .status-connected {
-            background-color: var(--ok);
-            box-shadow: 0 0 10px var(--ok);
-        }
-
-        .status-disconnected {
-            background-color: var(--risk);
-        }
-
-        .status-connecting {
-            background-color: var(--warn);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .map-container {
-            height: 500px;
-            margin-bottom: 30px;
-            border-radius: var(--radius);
-            overflow: hidden;
-            border: 1px solid var(--stroke);
-        }
-
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-
-        .chart-container {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 30px;
-            height: 400px;
-        }
-
-        .config-panel {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--muted);
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--stroke);
-            background: var(--bg-soft);
-            color: var(--text);
-        }
-
-        .risk-low { color: var(--ok); }
-        .risk-medium { color: var(--warn); }
-        .risk-high { color: var(--risk); }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--brand);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .tab-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            background: var(--bg-soft);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            border: 1px solid var(--stroke);
-        }
-
-        .tab.active {
-            background: var(--brand);
-            color: #001518;
-            border-color: var(--brand);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .sensor-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .sensor-card {
-            background: var(--bg-soft);
-            border-radius: var(--radius-sm);
-            padding: 15px;
-            border: 1px solid var(--stroke);
-        }
-
-        .sensor-value {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 10px 0;
-            color: var(--brand);
-        }
-
-        .insar-image {
-            width: 100%;
-            border-radius: var(--radius-sm);
-            margin-bottom: 15px;
-            border: 1px solid var(--stroke);
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: var(--radius);
-            background: var(--card);
-            border: 1px solid var(--stroke);
-            box-shadow: var(--shadow);
-            z-index: 1000;
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: all 0.3s ease;
-        }
-        
-        .notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .notification.success {
-            border-left: 4px solid var(--ok);
-        }
-        
-        .notification.error {
-            border-left: 4px solid var(--risk);
-        }
-        
-        .auth-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--brand);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: var(--bg);
-        }
-    </style>
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero h2{font-size:38px}
+      .hero-cards{grid-template-columns:1fr}
+      .grid-3{grid-template-columns:1fr}
+      .grid-2{grid-template-columns:1fr}
+      .cta{flex-direction:column; align-items:flex-start}
+    }
+  </style>
 </head>
 <body>
-    <div id="notification" class="notification"></div>
-    
-    <div class="container">
-        <header>
-            <div class="logo">
-                <div class="logo-icon"></div>
-                <div class="logo-text">SEIS AI</div>
-            </div>
-            <h1>Enhanced Data Integration Dashboard</h1>
-            <div class="auth-container">
-                <div id="userInfo" class="user-info" style="display: none;">
-                    <div class="user-avatar" id="userAvatar"></div>
-                    <span id="userName"></span>
-                    <button id="logoutBtn" class="btn">Logout</button>
-                </div>
-                <button id="loginBtn" class="btn btn-primary">Login</button>
-            </div>
-        </header>
-
-        <div class="card">
-            <h2>API Configuration</h2>
-            <div class="config-panel">
-                <div class="form-group">
-                    <label for="usgsApiKey">USGS API Key (Optional)</label>
-                    <input type="text" id="usgsApiKey" placeholder="Enter your USGS API key">
-                </div>
-                <div class="form-group">
-                    <label for="weatherApiKey">OpenWeatherMap API Key</label>
-                    <input type="text" id="weatherApiKey" placeholder="Enter your OpenWeatherMap API key">
-                </div>
-                <div class="form-group">
-                    <label for="nationalGeoApiKey">National Geological Survey API Key</label>
-                    <input type="text" id="nationalGeoApiKey" placeholder="Enter your national geological API key">
-                </div>
-                <div class="form-group">
-                    <label for="satelliteApiKey">Satellite Data API Key</label>
-                    <input type="text" id="satelliteApiKey" placeholder="Enter your satellite data API key">
-                </div>
-                <button id="saveConfig" class="btn btn-primary">Save Configuration</button>
-            </div>
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <h3>Login to SEIS AI</h3>
+      <form id="loginForm">
+        <div>
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required>
         </div>
-
-        <div class="card">
-            <h2>API Status</h2>
-            <div class="api-controls">
-                <button id="connectAll" class="btn btn-primary">Connect to All APIs</button>
-                <button id="getSeismicData" class="btn">Get Seismic Data</button>
-                <button id="getWeatherData" class="btn">Get Weather Data</button>
-                <button id="getGeoData" class="btn">Get Geological Data</button>
-                <button id="getSatelliteData" class="btn">Get Satellite Data</button>
-                <button id="getSensorData" class="btn">Get Sensor Data</button>
-            </div>
-            <div id="apiStatus">
-                <div class="data-item">
-                    <span class="status-indicator status-disconnected"></span>
-                    USGS API: Disconnected
-                </div>
-                <div class="data-item">
-                    <span class="status-indicator status-disconnected"></span>
-                    OpenWeatherMap API: Disconnected
-                </div>
-                <div class="data-item">
-                    <span class="status-indicator status-disconnected"></span>
-                    National Geological Survey API: Disconnected
-                </div>
-                <div class="data-item">
-                    <span class="status-indicator status-disconnected"></span>
-                    Satellite Data API: Disconnected
-                </div>
-                <div class="data-item">
-                    <span class="status-indicator status-disconnected"></span>
-                    Mine Sensor Network: Disconnected
-                </div>
-            </div>
+        <div>
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" required>
         </div>
-
-        <div class="data-section">
-            <div class="card">
-                <h2>Seismic Data</h2>
-                <div class="data-container" id="seismicData">
-                    <p>No seismic data available. Click "Get Seismic Data" to load information.</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Weather Data</h2>
-                <div class="data-container" id="weatherData">
-                    <p>No weather data available. Click "Get Weather Data" to load information.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="data-section">
-            <div class="card">
-                <h2>Geological Survey Data</h2>
-                <div class="data-container" id="geoData">
-                    <p>No geological data available. Click "Get Geological Data" to load information.</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Satellite & InSAR Data</h2>
-                <div class="tab-container">
-                    <div class="tab active" data-tab="insar">InSAR Data</div>
-                    <div class="tab" data-tab="satellite">Satellite Imagery</div>
-                </div>
-                <div class="data-container" id="satelliteData">
-                    <div class="tab-content active" id="insar-tab">
-                        <p>No InSAR data available. Click "Get Satellite Data" to load information.</p>
-                    </div>
-                    <div class="tab-content" id="satellite-tab">
-                        <p>No satellite imagery available. Click "Get Satellite Data" to load information.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Mine Sensor Data</h2>
-            <div class="data-container" id="sensorData">
-                <p>No sensor data available. Click "Get Sensor Data" to load information.</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Seismic Activity Map</h2>
-            <div class="map-container">
-                <div id="map"></div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Risk Assessment Chart</h2>
-            <div class="chart-container">
-                <canvas id="riskChart"></canvas>
-            </div>
-        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+      </form>
+      <p style="margin-top: 20px; font-size: 14px; text-align: center;">
+        Don't have an account? <a href="#" id="showRegister">Register</a>
+      </p>
     </div>
+  </div>
 
-    <!-- Login Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <h3>Login to SEIS AI</h3>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="loginEmail">Email</label>
-                    <input type="email" id="loginEmail" required>
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
-            </form>
-            <p style="margin-top: 20px; font-size: 14px; text-align: center;">
-                Don't have an account? <a href="#" id="showRegister">Register</a>
-            </p>
+  <!-- Register Modal -->
+  <div id="registerModal" class="modal">
+    <div class="modal-content">
+      <h3>Create an Account</h3>
+      <form id="registerForm">
+        <div>
+          <label for="registerName">Full Name</label>
+          <input type="text" id="registerName" required>
         </div>
-    </div>
-
-    <!-- Register Modal -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <h3>Create an Account</h3>
-            <form id="registerForm">
-                <div class="form-group">
-                    <label for="registerName">Full Name</label>
-                    <input type="text" id="registerName" required>
-                </div>
-                <div class="form-group">
-                    <label for="registerCompany">Company</label>
-                    <input type="text" id="registerCompany" required>
-                </div>
-                <div class="form-group">
-                    <label for="registerEmail">Email</label>
-                    <input type="email" id="registerEmail" required>
-                </div>
-                <div class="form-group">
-                    <label for="registerPassword">Password</label>
-                    <input type="password" id="registerPassword" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
-            </form>
-            <p style="margin-top: 20px; font-size: 14px; text-align: center;">
-                Already have an account? <a href="#" id="showLogin">Login</a>
-            </p>
+        <div>
+          <label for="registerCompany">Company</label>
+          <input type="text" id="registerCompany" required>
         </div>
+        <div>
+          <label for="registerEmail">Email</label>
+          <input type="email" id="registerEmail" required>
+        </div>
+        <div>
+          <label for="registerPassword">Password</label>
+          <input type="password" id="registerPassword" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+      </form>
+      <p style="margin-top: 20px; font-size: 14px; text-align: center;">
+        Already have an account? <a href="#" id="showLogin">Login</a>
+      </p>
     </div>
+  </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // API base URL - update to match your server
-        const API_BASE_URL = 'http://localhost:3000/api';
-        
-        // Enhanced API configuration
-        const API_CONFIG = {
-            usgs: {
-                baseUrl: 'https://earthquake.usgs.gov/fdsnws/event/1/query',
-                formats: ['geojson', 'xml', 'csv', 'text'],
-                defaultParams: {
-                    format: 'geojson',
-                    limit: 20,
-                    orderby: 'time'
-                }
-            },
-            openWeather: {
-                baseUrl: 'https://api.openweathermap.org/data/2.5',
-                endpoints: {
-                    current: '/weather',
-                    forecast: '/forecast',
-                    onecall: '/onecall'
-                }
-            },
-            nationalGeo: {
-                baseUrl: 'https://api.national-geological-survey.example.com',
-                endpoints: {
-                    hazards: '/hazards',
-                    geology: '/geology'
-                }
-            },
-            satellite: {
-                baseUrl: 'https://api.satellite-data.example.com',
-                endpoints: {
-                    insar: '/insar',
-                    imagery: '/imagery'
-                }
-            },
-            mineSensors: {
-                baseUrl: 'https://api.mine-sensors.example.com',
-                endpoints: {
-                    readings: '/readings'
-                }
-            }
-        };
+  <!-- Navigation -->
+  <header class="nav" aria-label="Primary">
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <h1 aria-label="SEIS AI">SEIS AI</h1>
+      </div>
+      <nav class="nav-links" aria-label="Site">
+        <a href="#map-section">Live Map</a>
+        <a href="#features">How it works</a>
+        <a href="#proof">Case Studies</a>
+        <a href="#" id="logoutBtn" style="display: none;">Logout</a>
+        <a href="#contact" class="btn btn-primary">Book a demo</a>
+      </nav>
+    </div>
+  </header>
 
-        // Application state
-        let appState = {
-            apiKeys: {
-                usgs: '',
-                openWeather: '',
-                nationalGeo: '',
-                satellite: '',
-                mineSensors: ''
-            },
-            connections: {
-                usgs: false,
-                openWeather: false,
-                nationalGeo: false,
-                satellite: false,
-                mineSensors: false
-            },
-            seismicData: [],
-            weatherData: {},
-            geoData: [],
-            satelliteData: {},
-            sensorData: {},
-            map: null,
-            riskChart: null,
-            authToken: localStorage.getItem('authToken') || null,
-            currentUser: JSON.parse(localStorage.getItem('user')) || null
-        };
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="eyebrow">AI for open‑pit stability</span>
+      <h2>Predict rockfalls before they happen. Protect people, assets, and production.</h2>
+      <p>SEIS AI fuses slope monitoring, weather, blasting, and geotechnical data to forecast rockfall risk hours to days ahead, with realtime alerts and a live risk map for every pit, bench, and ramp.</p>
+      <div class="hero-ctas">
+        <a href="#map-section" class="btn btn-primary">See live map</a>
+        <a href="#features" class="btn">How it works</a>
+      </div>
+      <div class="trust">
+        <span class="dot" aria-hidden="true"></span>
+        <span>99.95% alert uptime • <strong>Sub‑minute</strong> data latency • <strong>On‑prem or cloud</strong></span>
+      </div>
 
-        // DOM elements
-        const usgsApiKeyInput = document.getElementById('usgsApiKey');
-        const weatherApiKeyInput = document.getElementById('weatherApiKey');
-        const nationalGeoApiKeyInput = document.getElementById('nationalGeoApiKey');
-        const satelliteApiKeyInput = document.getElementById('satelliteApiKey');
-        const saveConfigBtn = document.getElementById('saveConfig');
-        const connectAllBtn = document.getElementById('connectAll');
-        const getSeismicDataBtn = document.getElementById('getSeismicData');
-        const getWeatherDataBtn = document.getElementById('getWeatherData');
-        const getGeoDataBtn = document.getElementById('getGeoData');
-        const getSatelliteDataBtn = document.getElementById('getSatelliteData');
-        const getSensorDataBtn = document.getElementById('getSensorData');
-        const apiStatusDiv = document.getElementById('apiStatus');
-        const seismicDataDiv = document.getElementById('seismicData');
-        const weatherDataDiv = document.getElementById('weatherData');
-        const geoDataDiv = document.getElementById('geoData');
-        const satelliteDataDiv = document.getElementById('satelliteData');
-        const sensorDataDiv = document.getElementById('sensorData');
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const loginBtn = document.getElementById('loginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const userInfo = document.getElementById('userInfo');
-        const userName = document.getElementById('userName');
-        const userAvatar = document.getElementById('userAvatar');
-        const loginModal = document.getElementById('loginModal');
-        const registerModal = document.getElementById('registerModal');
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        const showRegister = document.getElementById('showRegister');
-        const showLogin = document.getElementById('showLogin');
-        const notification = document.getElementById('notification');
+      <div class="hero-cards" role="list">
+        <div class="card" role="listitem">
+          <div class="badge">False alerts ↓</div>
+          <h3>Precision you can trust</h3>
+          <div class="metric ok">−43% nuisance alarms</div>
+          <p class="muted">Signal fusion + adaptive thresholds reduce fatigue without missing critical events.</p>
+        </div>
+        <div class="card" role="listitem">
+          <div class="badge">Time to act</div>
+          <h3>Early warning window</h3>
+          <div class="metric warn">2–24 hr look‑ahead</div>
+          <p class="muted">Scenario forecasts flag rising risk days before slope movement accelerates.</p>
+        </div>
+        <div class="card" role="listitem">
+          <div class="badge">Safety outcomes</div>
+          <h3>Reduced exposure</h3>
+          <div class="metric risk">0 lost‑time injuries</div>
+          <p class="muted">Automated exclusion zones and shift planning minimize time in harm's way.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        // Show notification
-        function showNotification(message, type = 'success') {
-            notification.textContent = message;
-            notification.className = `notification ${type} show`;
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
+  <!-- Map -->
+  <section id="map-section" class="section" aria-labelledby="map-title">
+    <h3 id="map-title">Global open‑pit risk map</h3>
+    <p>Explore open‑pit mines worldwide. Filter by region and live risk. Click a site for detail, telemetry freshness, and last alert.</p>
 
-        // Initialize the map
-        function initMap() {
-            if (appState.map) return;
-            
-            appState.map = L.map('map').setView([20, 0], 2);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(appState.map);
-        }
+    <div class="map-wrap">
+      <div class="map-toolbar">
+        <div class="filters" role="group" aria-label="Risk filters">
+          <label class="chip"><input type="checkbox" id="f-ok" checked> Low</label>
+          <label class="chip"><input type="checkbox" id="f-warn" checked> Medium</label>
+          <label class="chip"><input type="checkbox" id="f-risk" checked> High</label>
+          <label class="chip"><input type="checkbox" id="f-unknown" checked> Unknown</label>
+          <select id="region" class="select" aria-label="Region">
+            <option value="all" selected>All regions</option>
+            <option value="africa">Africa</option>
+            <option value="asia">Asia</option>
+            <option value="europe">Europe</option>
+            <option value="north-america">North America</option>
+            <option value="south-america">South America</option>
+            <option value="oceania">Oceania</option>
+          </select>
+        </div>
+        <div class="filters">
+          <button id="refreshData" class="btn">
+            <span class="spinner" id="refreshSpinner" style="display:none"></span>
+            <span id="refreshText">Refresh data</span>
+          </button>
+          <button id="fitAll" class="btn">Fit to results</button>
+          <a href="#contact" class="btn btn-primary">Request site onboarding</a>
+        </div>
+      </div>
 
-        // Initialize the risk chart
-        function initRiskChart() {
-            const ctx = document.getElementById('riskChart').getContext('2d');
-            
-            if (appState.riskChart) {
-                appState.riskChart.destroy();
-            }
-            
-            appState.riskChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
-                    datasets: [{
-                        label: 'Mines by Risk Level',
-                        data: [12, 8, 4],
-                        backgroundColor: [
-                            'rgba(30, 194, 139, 0.7)',
-                            'rgba(255, 176, 32, 0.7)',
-                            'rgba(255, 92, 92, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(30, 194, 139, 1)',
-                            'rgba(255, 176, 32, 1)',
-                            'rgba(255, 92, 92, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Mines'
-                            }
-                        }
-                    }
-                }
-            });
-        }
+      <div style="position:relative">
+        <div id="map" role="application" aria-label="Interactive map of open‑pit mines"></div>
 
-        // Update API status display
-        function updateApiStatus() {
-            const usgsStatus = appState.connections.usgs ? 
-                '<span class="status-indicator status-connected"></span> USGS API: Connected' :
-                '<span class="status-indicator status-disconnected"></span> USGS API: Disconnected';
-                
-            const weatherStatus = appState.connections.openWeather ? 
-                '<span class="status-indicator status-connected"></span> OpenWeatherMap API: Connected' :
-                '<span class="status-indicator status-disconnected"></span> OpenWeatherMap API: Disconnected';
-                
-            const geoStatus = appState.connections.nationalGeo ? 
-                '<span class="status-indicator status-connected"></span> National Geological Survey API: Connected' :
-                '<span class="status-indicator status-disconnected"></span> National Geological Survey API: Disconnected';
-                
-            const satelliteStatus = appState.connections.satellite ? 
-                '<span class="status-indicator status-connected"></span> Satellite Data API: Connected' :
-                '<span class="status-indicator status-disconnected"></span> Satellite Data API: Disconnected';
-                
-            const sensorStatus = appState.connections.mineSensors ? 
-                '<span class="status-indicator status-connected"></span> Mine Sensor Network: Connected' :
-                '<span class="status-indicator status-disconnected"></span> Mine Sensor Network: Disconnected';
-                
-            apiStatusDiv.innerHTML = `
-                <div class="data-item">${usgsStatus}</div>
-                <div class="data-item">${weatherStatus}</div>
-                <div class="data-item">${geoStatus}</div>
-                <div class="data-item">${satelliteStatus}</div>
-                <div class="data-item">${sensorStatus}</div>
-            `;
-        }
+        <!-- Legend -->
+        <div class="legend" aria-live="polite">
+          <div><strong>Legend</strong></div>
+          <div class="row"><span class="dot ok"></span> Low</div>
+          <div class="row"><span class="dot warn"></span> Medium</div>
+          <div class="row"><span class="dot risk"></span> High</div>
+          <div class="row"><span class="dot unknown"></span> Unknown</div>
+        </div>
 
-        // Tab switching functionality
-        function initTabs() {
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabId = tab.getAttribute('data-tab');
-                    
-                    // Update active tab
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    // Show corresponding content
-                    tabContents.forEach(content => {
-                        content.classList.remove('active');
-                        if (content.id === `${tabId}-tab`) {
-                            content.classList.add('active');
-                        }
-                    });
-                });
-            });
-        }
+        <!-- Details panel -->
+        <aside class="map-panel" id="panel" aria-live="polite">
+          <h4 id="panel-title">Mine details</h4>
+          <div id="panel-body"></div>
+          <div class="risk-chart-container">
+            <canvas id="risk-chart" class="risk-chart"></canvas>
+          </div>
+          <small id="panel-note"></small>
+        </aside>
+      </div>
+    </div>
+    <small style="color:var(--muted); display:block; margin-top:8px">Map data © OpenStreetMap contributors. Mine locations are illustrative. Replace with your dataset for production.</small>
+  </section>
 
-        // Fetch seismic data from USGS API
-        async function fetchSeismicData() {
-            try {
-                getSeismicDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getSeismicDataBtn.disabled = true;
-                
-                // Use the backend API instead of direct USGS API call
-                const response = await fetch(`${API_BASE_URL}/seismic/global`, {
-                    headers: {
-                        'Authorization': `Bearer ${appState.authToken}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        showNotification('Please login to access seismic data', 'error');
-                        return;
-                    }
-                    throw new Error(`API error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                appState.seismicData = data.events || [];
-                
-                displaySeismicData();
-                plotSeismicDataOnMap();
-                updateRiskAssessment();
-                
-                appState.connections.usgs = true;
-                updateApiStatus();
-                showNotification('Seismic data loaded successfully');
-                
-            } catch (error) {
-                console.error('Error fetching seismic data:', error);
-                seismicDataDiv.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-                showNotification('Error loading seismic data', 'error');
-            } finally {
-                getSeismicDataBtn.innerHTML = 'Get Seismic Data';
-                getSeismicDataBtn.disabled = false;
-            }
-        }
+  <!-- Features -->
+  <section id="features" class="section" aria-labelledby="feat-title">
+    <h3 id="feat-title">How SEIS AI works</h3>
+    <div class="grid-3">
+      <div class="feature">
+        <div class="badge">Signal fusion</div>
+        <h4>All signals, one model</h4>
+        <p>Integrates slope radars, prisms, LiDAR, blasting logs, rainfall, seismic, temperature, and production plans. Each mine gets a calibrated model.</p>
+      </div>
+      <div class="feature">
+        <div class="badge">Forecasting</div>
+        <h4>Short‑term risk forecasts</h4>
+        <p>Nowcasts every 60s and generates 2–24 hr risk scenarios with confidence intervals and automatic thresholding for each bench.</p>
+      </div>
+      <div class="feature">
+        <div class="badge">Actioning</div>
+        <h4>Alerts that trigger action</h4>
+        <p>Push alerts to radio, SMS, email, and dispatch. Auto‑creates exclusion zones and recommends haul ramp reroutes and shift changes.</p>
+      </div>
+    </div>
+  </section>
 
-        // Display seismic data in the UI
-        function displaySeismicData() {
-            if (!appState.seismicData.length) {
-                seismicDataDiv.innerHTML = '<p>No seismic data available.</p>';
-                return;
-            }
-            
-            let html = '';
-            appState.seismicData.slice(0, 10).forEach(event => {
-                const magnitude = event.magnitude;
-                const place = event.location;
-                const time = new Date(event.timestamp).toLocaleString();
-                const depth = event.depth;
-                
-                let riskLevel = 'risk-low';
-                if (magnitude >= 5.0) riskLevel = 'risk-high';
-                else if (magnitude >= 4.0) riskLevel = 'risk-medium';
-                
-                html += `
-                    <div class="data-item">
-                        <div><strong>${place}</strong></div>
-                        <div>Magnitude: <span class="${riskLevel}">${magnitude}</span></div>
-                        <div>Depth: ${depth} km</div>
-                        <div>Time: ${time}</div>
-                    </div>
-                `;
-            });
-            
-            seismicDataDiv.innerHTML = html;
-        }
+  <!-- Proof -->
+  <section id="proof" class="section" aria-labelledby="proof-title">
+    <h3 id="proof-title">Field‑proven outcomes</h3>
+    <div class="grid-2">
+      <div class="quote">
+        <blockquote>“The system flagged a wall instability 9 hours early. We cleared the ramp, avoided equipment damage, and lost zero hours.”</blockquote>
+        <small>Operations Manager, Copper Mine</small>
+      </div>
+      <div class="quote">
+        <blockquote>“Setup was fast and the map just works. Our geotechs spend more time validating and less time stitching spreadsheets.”</blockquote>
+        <small>Senior Geotech, Gold Mine</small>
+      </div>
+    </div>
+  </section>
 
-        // Plot seismic data on the map
-        function plotSeismicDataOnMap() {
-            if (!appState.map) initMap();
-            
-            // Clear existing markers
-            appState.map.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
-                    appState.map.removeLayer(layer);
-                }
-            });
-            
-            // Add new markers
-            appState.seismicData.forEach(event => {
-                const lng = event.longitude;
-                const lat = event.latitude;
-                const depth = event.depth;
-                const magnitude = event.magnitude;
-                const place = event.location;
-                
-                let color = '#1ec28b'; // Green for low risk
-                if (magnitude >= 5.0) color = '#ff5c5c'; // Red for high risk
-                else if (magnitude >= 4.0) color = '#ffb020'; // Orange for medium risk
-                
-                const marker = L.circleMarker([lat, lng], {
-                    radius: magnitude * 2,
-                    fillColor: color,
-                    color: '#000',
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                }).addTo(appState.map);
-                
-                marker.bindPopup(`
-                    <strong>${place}</strong><br>
-                    Magnitude: ${magnitude}<br>
-                    Depth: ${depth} km
-                `);
-            });
-            
-            // Fit map to show all markers
-            if (appState.seismicData.length > 0) {
-                const group = new L.featureGroup(
-                    appState.seismicData.map(event => {
-                        return L.marker([event.latitude, event.longitude]);
-                    })
-                );
-                appState.map.fitBounds(group.getBounds().pad(0.1));
-            }
-        }
+  <!-- CTA band -->
+  <section id="contact" class="cta" aria-labelledby="cta-title">
+    <div>
+      <h4 id="cta-title">Bring SEIS AI to your site</h4>
+      <p>We'll connect to your monitoring stack and deploy a calibrated model in days, not months.</p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap">
+      <a class="btn btn-primary" href="mailto:hello@seis.ai?subject=SEIS%20AI%20Demo">Book a demo</a>
+      <a class="btn" href="#">Download one‑pager</a>
+    </div>
+  </section>
 
-        // Fetch weather data from backend API
-        async function fetchWeatherData() {
-            try {
-                getWeatherDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getWeatherDataBtn.disabled = true;
-                
-                // Get mines first to get their coordinates
-                const minesResponse = await fetch(`${API_BASE_URL}/mines`, {
-                    headers: {
-                        'Authorization': `Bearer ${appState.authToken}`
-                    }
-                });
-                
-                if (!minesResponse.ok) {
-                    if (minesResponse.status === 401) {
-                        showNotification('Please login to access weather data', 'error');
-                        return;
-                    }
-                    throw new Error(`Mines API error: ${minesResponse.status}`);
-                }
-                
-                const mines = await minesResponse.json();
-                
-                // Get weather for each mine
-                const weatherPromises = mines.slice(0, 4).map(async mine => {
-                    const response = await fetch(`${API_BASE_URL}/weather/${mine.id}`, {
-                        headers: {
-                            'Authorization': `Bearer ${appState.authToken}`
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`Weather API error: ${response.status}`);
-                    }
-                    
-                    const weather = await response.json();
-                    return { mine, weather };
-                });
-                
-                const weatherResults = await Promise.all(weatherPromises);
-                appState.weatherData = weatherResults;
-                
-                displayWeatherData();
-                
-                appState.connections.openWeather = true;
-                updateApiStatus();
-                showNotification('Weather data loaded successfully');
-                
-            } catch (error) {
-                console.error('Error fetching weather data:', error);
-                weatherDataDiv.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-                showNotification('Error loading weather data', 'error');
-            } finally {
-                getWeatherDataBtn.innerHTML = 'Get Weather Data';
-                getWeatherDataBtn.disabled = false;
-            }
-        }
+  <footer>
+    <div class="foot">
+      <div style="display:flex; align-items:center; gap:10px">
+        <div class="logo" aria-hidden="true" style="width:26px; height:26px"></div>
+        <span>© SEIS AI</span>
+      </div>
+      <div style="display:flex; gap:14px">
+        <a href="#">Privacy</a>
+        <a href="#">Security</a>
+        <a href="#">Status</a>
+      </div>
+    </div>
+  </footer>
 
-        // Display weather data in the UI
-        function displayWeatherData() {
-            if (!appState.weatherData.length) {
-                weatherDataDiv.innerHTML = '<p>No weather data available.</p>';
-                return;
-            }
-            
-            let html = '';
-            appState.weatherData.forEach(({ mine, weather }) => {
-                const temp = weather.temperature;
-                const humidity = weather.humidity;
-                const conditions = weather.condition;
-                const windSpeed = weather.windSpeed;
-                
-                html += `
-                    <div class="data-item">
-                        <div><strong>${mine.name}</strong></div>
-                        <div>Temperature: ${temp}°C</div>
-                        <div>Humidity: ${humidity}%</div>
-                        <div>Conditions: ${conditions}</div>
-                        <div>Wind Speed: ${windSpeed} m/s</div>
-                    </div>
-                `;
-            });
-            
-            weatherDataDiv.innerHTML = html;
-        }
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 
-        // Fetch geological survey data from backend API
-        async function fetchGeoData() {
-            try {
-                getGeoDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getGeoDataBtn.disabled = true;
-                
-                const response = await fetch(`${API_BASE_URL}/geological-data`, {
-                    headers: {
-                        'Authorization': `Bearer ${appState.authToken}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        showNotification('Please login to access geological data', 'error');
-                        return;
-                    }
-                    throw new Error(`API error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                appState.geoData = data;
-                
-                displayGeoData();
-                
-                appState.connections.nationalGeo = true;
-                updateApiStatus();
-                showNotification('Geological data loaded successfully');
-                
-            } catch (error) {
-                console.error('Error fetching geological data:', error);
-                geoDataDiv.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-                showNotification('Error loading geological data', 'error');
-            } finally {
-                getGeoDataBtn.innerHTML = 'Get Geological Data';
-                getGeoDataBtn.disabled = false;
-            }
-        }
+  <script>
+    // Authentication state
+    let authToken = null;
+    let currentUser = null;
 
-        // Display geological data in the UI
-        function displayGeoData() {
-            if (!appState.geoData.length) {
-                geoDataDiv.innerHTML = '<p>No geological data available.</p>';
-                return;
-            }
-            
-            let html = '';
-            appState.geoData.forEach(geo => {
-                let riskClass = 'risk-low';
-                if (geo.hazardLevel === "High") riskClass = 'risk-high';
-                else if (geo.hazardLevel === "Medium") riskClass = 'risk-medium';
-                
-                html += `
-                    <div class="data-item">
-                        <div><strong>${geo.region}</strong></div>
-                        <div>Rock Type: ${geo.rockType}</div>
-                        <div>Hazard Level: <span class="${riskClass}">${geo.hazardLevel}</span></div>
-                        <div>Stability: ${geo.stability}</div>
-                        <div>Last Survey: ${geo.survey_date}</div>
-                    </div>
-                `;
-            });
-            
-            geoDataDiv.innerHTML = html;
-        }
+    // Color by risk
+    const riskColor = (risk) => ({
+      low: getComputedStyle(document.documentElement).getPropertyValue('--ok') || '#1ec28b',
+      medium: getComputedStyle(document.documentElement).getPropertyValue('--warn') || '#ffb020',
+      high: getComputedStyle(document.documentElement).getPropertyValue('--risk') || '#ff5c5c',
+      unknown: '#8092a6'
+    }[risk] || '#8092a6');
 
-        // Fetch satellite and InSAR data from backend API
-        async function fetchSatelliteData() {
-            try {
-                getSatelliteDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getSatelliteDataBtn.disabled = true;
-                
-                // This would be replaced with actual API call in production
-                // For now, we'll use mock data
-                
-                // Mock data for demonstration
-                const mockInSARData = [
-                    {
-                        location: "Chuquicamata Mine, Chile",
-                        displacement: "12mm",
-                        period: "2023-10-01 to 2023-11-30",
-                        trend: "Subsidence"
-                    },
-                    {
-                        location: "Grasberg Mine, Indonesia",
-                        displacement: "8mm",
-                        period: "2023-10-15 to 2023-11-30",
-                        trend: "Stable"
-                    },
-                    {
-                        location: "Super Pit Mine, Australia",
-                        displacement: "18mm",
-                        period: "2023-09-01 to 2023-11-30",
-                        trend: "Uplift"
-                    }
-                ];
-                
-                appState.satelliteData = {
-                    insar: mockInSARData,
-                    imagery: "https://example.com/satellite-imagery/2023-12-01.png"
-                };
-                
-                displaySatelliteData();
-                
-                appState.connections.satellite = true;
-                updateApiStatus();
-                showNotification('Satellite data loaded successfully');
-                
-            } catch (error) {
-                console.error('Error fetching satellite data:', error);
-                document.querySelector('#insar-tab').innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-                document.querySelector('#satellite-tab').innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-                showNotification('Error loading satellite data', 'error');
-            } finally {
-                getSatelliteDataBtn.innerHTML = 'Get Satellite Data';
-                getSatelliteDataBtn.disabled = false;
-            }
-        }
+    // Enhanced sample dataset with more realistic data
+    const mines = [
+      {id:"mx-copper-1", name:"Buenavista del Cobre", company:"Grupo México", commodity:"Cu", region:"north-america", risk:"medium", lat:30.041, lng:-110.985, lastAlertISO:"2025-09-09T11:05:00Z", telemetryMins:3, riskHistory: [15, 18, 22, 35, 42, 38, 45]},
+      {id:"cl-copper-1", name:"Chuquicamata", company:"Codelco", commodity:"Cu", region:"south-america", risk:"low", lat:-22.33, lng:-68.93, lastAlertISO:"2025-09-13T14:02:00Z", telemetryMins:1, riskHistory: [8, 12, 10, 15, 18, 20, 22]},
+      {id:"au-gold-1", name:"Fimiston (Super Pit)", company:"KCGM", commodity:"Au", region:"oceania", risk:"high", lat:-30.75, lng:121.49, lastAlertISO:"2025-09-13T08:20:00Z", telemetryMins:7, riskHistory: [35, 42, 55, 68, 72, 78, 85]},
+      {id:"za-plat-1", name:"Mogalakwena", company:"Anglo American", commodity:"PGM", region:"africa", risk:"low", lat:-23.53, lng:28.98, lastAlertISO:"2025-09-12T22:12:00Z", telemetryMins:4, riskHistory: [10, 12, 8, 15, 12, 10, 8]},
+      {id:"cn-iron-1", name:"Anshan Open Pit", company:"Ansteel", commodity:"Fe", region:"asia", risk:"medium", lat:41.1, lng:123.0, lastAlertISO:"2025-09-13T09:44:00Z", telemetryMins:2, riskHistory: [25, 30, 28, 32, 38, 35, 40]},
+      {id:"in-lime-1", name:"Kasipalayam Pit", company:"TN Lime Ltd", commodity:"Limestone", region:"asia", risk:"unknown", lat:12.739, lng:80.003, lastAlertISO:null, telemetryMins:null, riskHistory: []},
+      {id:"se-iron-1", name:"Aitik", company:"Boliden", commodity:"Cu/Au", region:"europe", risk:"low", lat:67.077, lng:20.95, lastAlertISO:"2025-09-13T12:05:00Z", telemetryMins:5, riskHistory: [12, 15, 18, 20, 15, 12, 10]},
+      {id:"us-gold-1", name:"Bingham Canyon", company:"Rio Tinto", commodity:"Cu/Au", region:"north-america", risk:"medium", lat:40.536, lng:-112.151, lastAlertISO:"2025-09-13T13:40:00Z", telemetryMins:2, riskHistory: [28, 32, 35, 40, 38, 42, 45]},
+      {id:"id-copper-1", name:"Grasberg Open Pit", company:"Freeport", commodity:"Cu/Au", region:"asia", risk:"high", lat:-4.06, lng:137.11, lastAlertISO:"2025-09-11T06:55:00Z", telemetryMins:15, riskHistory: [45, 50, 55, 62, 68, 72, 78]},
+      {id:"au-iron-1", name:"Mt Whaleback", company:"BHP", commodity:"Fe", region:"oceania", risk:"low", lat:-23.35, lng:119.73, lastAlertISO:"2025-09-13T10:10:00Z", telemetryMins:3, riskHistory: [15, 12, 10, 8, 12, 15, 18]},
+      {id:"pe-copper-1", name:"Cerro Verde", company:"Freeport", commodity:"Cu", region:"south-america", risk:"medium", lat:-16.55, lng:-71.57, lastAlertISO:"2025-09-13T10:31:00Z", telemetryMins:2, riskHistory: [25, 30, 28, 32, 35, 38, 40]},
+      {id:"ca-diam-1", name:"Diavik Pit", company:"Rio Tinto", commodity:"Diamonds", region:"north-america", risk:"unknown", lat:64.499, lng:-110.279, lastAlertISO:null, telemetryMins:null, riskHistory: []}
+    ];
 
-        // Display satellite data in the UI
-        function displaySatelliteData() {
-            if (!appState.satelliteData.insar) {
-                document.querySelector('#insar-tab').innerHTML = '<p>No InSAR data available.</p>';
-                document.querySelector('#satellite-tab').innerHTML = '<p>No satellite imagery available.</p>';
-                return;
-            }
-            
-            // Display InSAR data
-            let insarHtml = '';
-            appState.satelliteData.insar.forEach(insar => {
-                insarHtml += `
-                    <div class="data-item">
-                        <div><strong>${insar.location}</strong></div>
-                        <div>Displacement: ${insar.displacement}</div>
-                        <div>Period: ${insar.period}</div>
-                        <div>Trend: ${insar.trend}</div>
-                    </div>
-                `;
-            });
-            document.querySelector('#insar-tab').innerHTML = insarHtml;
-            
-            // Display satellite imagery (placeholder)
-            document.querySelector('#satellite-tab').innerHTML = `
-                <img src="https://via.placeholder.com/600x300/121821/12d6df?text=Satellite+Imagery+Placeholder" class="insar-image" alt="Satellite Imagery">
-                <p>Satellite imagery showing mine area and surrounding terrain.</p>
-                <p>Date: 2023-12-01 | Resolution: 30cm/pixel</p>
-            `;
-        }
+    // Risk chart instance
+    let riskChart = null;
 
-        // Fetch mine sensor data from backend API
-        async function fetchSensorData() {
-            try {
-                getSensorDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getSensorDataBtn.disabled = true;
-                
-                // Get mines first
-                const minesResponse = await fetch(`${API_BASE_URL}/mines`, {
-                    headers: {
-                        'Authorization': `Bearer ${appState.authToken}`
-                    }
-                });
-                
-                if (!minesResponse.ok) {
-                    if (minesResponse.status === 401) {
-                        showNotification('Please login to access sensor data', 'error');
-                        return;
-                    }
-                    throw new Error(`Mines API error: ${minesResponse.status}`);
-                }
-                
-                const mines = await minesResponse.json();
-                
-                if (mines.length === 0) {
-                    sensorDataDiv.innerHTML = '<p>No mines found. Please add mines first.</p>';
-                    return;
-                }
-                
-                // Get sensor data for the first mine
-                const mineId = mines[0].id;
-                const response = await fetch(`${API_BASE_URL}/sensor-data/${mineId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${appState.authToken}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Sensor API error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                appState.sensorData = {
-                    mine: mines[0],
-                    sensors: data
-                };
-                
-                displaySensorData();
-                
-                appState.connections.mineSensors = true;
-                updateApiStatus();
-                showNotification('Sensor data loaded successfully');
-                
-            } catch (error) {
-                console.error('Error fetching sensor data:', error);
-                sensorDataDiv.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-                showNotification('Error loading sensor data', 'error');
-            } finally {
-                getSensorDataBtn.innerHTML = 'Get Sensor Data';
-                getSensorDataBtn.disabled = false;
-            }
-        }
+    // Leaflet map init
+    const map = L.map('map', {
+      minZoom: 2,
+      worldCopyJump: true,
+      zoomControl: false
+    }).setView([15, 20], 2);
 
-        // Display sensor data in the UI
-        function displaySensorData() {
-            if (!appState.sensorData.sensors) {
-                sensorDataDiv.innerHTML = '<p>No sensor data available.</p>';
-                return;
-            }
-            
-            let html = `<h3>${appState.sensorData.mine.name}</h3>`;
-            html += '<div class="sensor-grid">';
-            
-            // Group sensors by type
-            const sensorsByType = {};
-            appState.sensorData.sensors.forEach(reading => {
-                if (!sensorsByType[reading.sensor_type]) {
-                    sensorsByType[reading.sensor_type] = [];
-                }
-                sensorsByType[reading.sensor_type].push(reading);
-            });
-            
-            // Display the latest reading for each sensor type
-            Object.entries(sensorsByType).forEach(([type, readings]) => {
-                const latestReading = readings[0];
-                const value = latestReading.reading_value;
-                const unit = type === 'Temperature' ? '°C' : 
-                            type === 'Humidity' ? '%' : 
-                            type === 'Pressure' ? 'hPa' : 
-                            type === 'Vibration' ? 'mm/s' : '';
-                
-                // Simple status determination based on value
-                let status = 'Normal';
-                let statusClass = 'risk-low';
-                
-                if (type === 'Vibration' && value > 10) {
-                    status = 'Warning';
-                    statusClass = 'risk-medium';
-                } else if (type === 'Vibration' && value > 20) {
-                    status = 'Danger';
-                    statusClass = 'risk-high';
-                }
-                
-                html += `
-                    <div class="sensor-card">
-                        <div><strong>${type} Sensor</strong></div>
-                        <div class="sensor-value">${value} ${unit}</div>
-                        <div>Status: <span class="${statusClass}">${status}</span></div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            sensorDataDiv.innerHTML = html;
-        }
+    L.control.zoom({ position:'topright' }).addTo(map);
 
-        // Update risk assessment based on all available data
-        function updateRiskAssessment() {
-            if (!appState.riskChart) initRiskChart();
-            
-            // In a real implementation, this would call the prediction API
-            // For now, we'll simulate based on seismic data
-            const highRiskCount = appState.seismicData.filter(e => e.magnitude >= 5.0).length;
-            const mediumRiskCount = appState.seismicData.filter(e => e.magnitude >= 4.0 && e.magnitude < 5.0).length;
-            const lowRiskCount = appState.seismicData.filter(e => e.magnitude < 4.0).length;
-            
-            appState.riskChart.data.datasets[0].data = [lowRiskCount, mediumRiskCount, highRiskCount];
-            appState.riskChart.update();
-        }
+    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
 
-        // Connect to all APIs
-        async function connectToAllApis() {
-            connectAllBtn.innerHTML = '<span class="loading"></span> Connecting...';
-            connectAllBtn.disabled = true;
-            
-            try {
-                await fetchSeismicData();
-                await fetchWeatherData();
-                await fetchGeoData();
-                await fetchSatelliteData();
-                await fetchSensorData();
-                
-                showNotification('All data sources connected successfully');
-            } catch (error) {
-                console.error('Error connecting to APIs:', error);
-                showNotification('Error connecting to some data sources', 'error');
-            } finally {
-                connectAllBtn.innerHTML = 'Connect to All APIs';
-                connectAllBtn.disabled = false;
-            }
-        }
+    // Marker factory
+    function circleMarker(m){
+      const color = riskColor(m.risk);
+      return L.circleMarker([m.lat, m.lng], {
+        radius: 8,
+        color: '#001016',
+        weight: 1,
+        fillColor: color,
+        fillOpacity: 0.95
+      });
+    }
 
-        // Save API configuration
-        function saveApiConfig() {
-            appState.apiKeys.usgs = usgsApiKeyInput.value;
-            appState.apiKeys.openWeather = weatherApiKeyInput.value;
-            appState.apiKeys.nationalGeo = nationalGeoApiKeyInput.value;
-            appState.apiKeys.satellite = satelliteApiKeyInput.value;
-            
-            localStorage.setItem('seisai_api_keys', JSON.stringify(appState.apiKeys));
-            
-            showNotification('API configuration saved!');
-        }
+    // State
+    const markers = [];
+    const group = L.featureGroup().addTo(map);
 
-        // Load saved API configuration
-        function loadApiConfig() {
-            const savedConfig = localStorage.getItem('seisai_api_keys');
-            if (savedConfig) {
-                appState.apiKeys = JSON.parse(savedConfig);
-                usgsApiKeyInput.value = appState.apiKeys.usgs;
-                weatherApiKeyInput.value = appState.apiKeys.openWeather;
-                nationalGeoApiKeyInput.value = appState.apiKeys.nationalGeo;
-                satelliteApiKeyInput.value = appState.apiKeys.satellite;
-            }
-        }
+    // Show login modal
+    function showLoginModal() {
+      document.getElementById('loginModal').style.display = 'block';
+    }
 
-        // Update user interface based on authentication state
-        function updateAuthUI() {
-            if (appState.authToken && appState.currentUser) {
-                loginBtn.style.display = 'none';
-                userInfo.style.display = 'flex';
-                userName.textContent = appState.currentUser.name;
-                userAvatar.textContent = appState.currentUser.name.charAt(0).toUpperCase();
-            } else {
-                loginBtn.style.display = 'block';
-                userInfo.style.display = 'none';
-            }
-        }
+    // Hide login modal
+    function hideLoginModal() {
+      document.getElementById('loginModal').style.display = 'none';
+    }
 
-        // Login function
-        async function login(email, password) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Login failed');
-                }
-                
-                const data = await response.json();
-                appState.authToken = data.token;
-                appState.currentUser = data.user;
-                
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                
-                updateAuthUI();
-                hideLoginModal();
-                showNotification('Login successful');
-                
-                return true;
-            } catch (error) {
-                console.error('Login error:', error);
-                showNotification('Login failed. Please check your credentials.', 'error');
-                return false;
-            }
-        }
+    // Show register modal
+    function showRegisterModal() {
+      document.getElementById('registerModal').style.display = 'block';
+      document.getElementById('loginModal').style.display = 'none';
+    }
 
-        // Register function
-        async function register(name, company, email, password) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name, company, email, password })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Registration failed');
-                }
-                
-                const data = await response.json();
-                appState.authToken = data.token;
-                appState.currentUser = data.user;
-                
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                
-                updateAuthUI();
-                hideRegisterModal();
-                showNotification('Registration successful');
-                
-                return true;
-            } catch (error) {
-                console.error('Registration error:', error);
-                showNotification('Registration failed. Please try again.', 'error');
-                return false;
-            }
-        }
+    // Hide register modal
+    function hideRegisterModal() {
+      document.getElementById('registerModal').style.display = 'none';
+    }
 
-        // Logout function
-        function logout() {
-            appState.authToken = null;
-            appState.currentUser = null;
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-            updateAuthUI();
-            showNotification('Logged out successfully');
-        }
+    // Login function
+    async function login(email, password) {
+      // Simulate API call
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          if (email && password) {
+            authToken = 'simulated-jwt-token';
+            currentUser = {
+              id: 1,
+              email: email,
+              name: 'Demo User',
+              company: 'Demo Mining Co.'
+            };
+            localStorage.setItem('authToken', authToken);
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        }, 1000);
+      });
+    }
 
+    // Register function
+    async function register(name, company, email, password) {
+      // Simulate API call
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          if (name && company && email && password) {
+            authToken = 'simulated-jwt-token';
+            currentUser = {
+              id: 1,
+              email: email,
+              name: name,
+              company: company
+            };
+            localStorage.setItem('authToken', authToken);
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        }, 1000);
+      });
+    }
+
+    // Logout function
+    function logout() {
+      authToken = null;
+      currentUser = null;
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      document.getElementById('logoutBtn').style.display = 'none';
+      showLoginModal();
+    }
+
+    // Check if user is logged in on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedToken = localStorage.getItem('authToken');
+      const savedUser = localStorage.getItem('user');
+      
+      if (savedToken && savedUser) {
+        authToken = savedToken;
+        currentUser = JSON.parse(savedUser);
+        document.getElementById('logoutBtn').style.display = 'block';
+        loadMineData();
+      } else {
         // Show login modal
-        function showLoginModal() {
-            loginModal.style.display = 'block';
-        }
+        showLoginModal();
+      }
+    });
 
-        // Hide login modal
-        function hideLoginModal() {
-            loginModal.style.display = 'none';
-        }
+    // Load mine data from API
+    async function loadMineData() {
+      // In a real implementation, this would fetch from your backend API
+      // For now, we'll use the static data
+      processMinesData(mines);
+    }
 
-        // Show register modal
-        function showRegisterModal() {
-            registerModal.style.display = 'block';
-            loginModal.style.display = 'none';
-        }
+    // Process mines data from API
+    function processMinesData(minesData) {
+      // Update your mines array with data from API
+      // For this demo, we're using the static data
+      applyFilters();
+    }
 
-        // Hide register modal
-        function hideRegisterModal() {
-            registerModal.style.display = 'none';
-        }
+    // Format time ago
+    function fmtAgo(mins){
+      if(mins === null || mins === undefined) return 'no telemetry';
+      if(mins < 60) return mins + ' min ago';
+      const h = Math.floor(mins/60), r = mins%60;
+      return `${h}h ${r}m ago`;
+    }
 
-        // Initialize the application
-        function initApp() {
-            initMap();
-            initRiskChart();
-            initTabs();
-            loadApiConfig();
-            updateApiStatus();
-            updateAuthUI();
-            
-            // Event listeners
-            saveConfigBtn.addEventListener('click', saveApiConfig);
-            connectAllBtn.addEventListener('click', connectToAllApis);
-            getSeismicDataBtn.addEventListener('click', fetchSeismicData);
-            getWeatherDataBtn.addEventListener('click', fetchWeatherData);
-            getGeoDataBtn.addEventListener('click', fetchGeoData);
-            getSatelliteDataBtn.addEventListener('click', fetchSatelliteData);
-            getSensorDataBtn.addEventListener('click', fetchSensorData);
-            
-            // Auth event listeners
-            loginBtn.addEventListener('click', showLoginModal);
-            logoutBtn.addEventListener('click', logout);
-            
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPassword').value;
-                await login(email, password);
-            });
-            
-            registerForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('registerName').value;
-                const company = document.getElementById('registerCompany').value;
-                const email = document.getElementById('registerEmail').value;
-                const password = document.getElementById('registerPassword').value;
-                await register(name, company, email, password);
-            });
-            
-            showRegister.addEventListener('click', (e) => {
-                e.preventDefault();
-                showRegisterModal();
-            });
-            
-            showLogin.addEventListener('click', (e) => {
-                e.preventDefault();
-                hideRegisterModal();
-                showLoginModal();
-            });
-            
-            // Close modals when clicking outside
-            window.addEventListener('click', (e) => {
-                if (e.target === loginModal) {
-                    hideLoginModal();
+    // Update risk chart
+    function updateRiskChart(mine) {
+      const ctx = document.getElementById('risk-chart').getContext('2d');
+      
+      // Destroy previous chart if it exists
+      if (riskChart) {
+        riskChart.destroy();
+      }
+      
+      if (mine.riskHistory && mine.riskHistory.length > 0) {
+        riskChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ['6d', '5d', '4d', '3d', '2d', '1d', 'Now'],
+            datasets: [{
+              label: 'Risk Score',
+              data: mine.riskHistory,
+              borderColor: riskColor(mine.risk),
+              backgroundColor: 'rgba(18, 214, 223, 0.1)',
+              borderWidth: 2,
+              tension: 0.3,
+              pointRadius: 3,
+              pointBackgroundColor: riskColor(mine.risk)
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)'
+                },
+                ticks: {
+                  color: '#9ba7b4'
                 }
-                if (e.target === registerModal) {
-                    hideRegisterModal();
+              },
+              x: {
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)'
+                },
+                ticks: {
+                  color: '#9ba7b4'
                 }
-            });
-        }
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: '#0b111a',
+                titleColor: '#e9edf3',
+                bodyColor: '#9ba7b4',
+                borderColor: '#1f2a38',
+                borderWidth: 1
+              }
+            }
+          }
+        });
+      }
+    }
 
-        // Start the application when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', initApp);
-    </script>
+    // Generate panel HTML
+    function panelHtml(m){
+      const riskLabel = m.risk.charAt(0).toUpperCase() + m.risk.slice(1);
+      const color = riskColor(m.risk);
+      const lastAlert = m.lastAlertISO ? new Date(m.lastAlertISO).toUTCString() : '—';
+      const tele = m.telemetryMins!=null ? fmtAgo(m.telemetryMins) : '—';
+      return `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
+          <div>
+            <div class="badge" style="border-color:${color}; color:${color}">${riskLabel} risk</div>
+            <h4 style="margin:8px 0 4px">${m.name}</h4>
+            <small>${m.company} • ${m.commodity}</small>
+          </div>
+          <div style="text-align:right">
+            <a class="btn" style="height:32px" href="#contact">Request access</a>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--stroke); margin:10px 0"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div class="card" style="padding:12px">
+            <div class="muted">Last alert</div>
+            <div style="color:${color}; font-weight:800">${lastAlert}</div>
+          </div>
+          <div class="card" style="padding:12px">
+            <div class="muted">Telemetry</div>
+            <div style="color:${color}; font-weight:800">${tele}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Apply filters to map markers
+    function applyFilters(){
+      const ok = document.getElementById('f-ok').checked;
+      const warn = document.getElementById('f-warn').checked;
+      const risk = document.getElementById('f-risk').checked;
+      const unknown = document.getElementById('f-unknown').checked;
+      const region = document.getElementById('region').value;
+
+      group.clearLayers();
+      markers.length = 0;
+
+      const filtered = mines.filter(m=>{
+        const passRisk = (m.risk==='low'&&ok) || (m.risk==='medium'&&warn) || (m.risk==='high'&&risk) || (m.risk==='unknown'&&unknown);
+        const passRegion = region==='all' || m.region===region;
+        return passRisk && passRegion;
+      });
+
+      filtered.forEach(m=>{
+        const mk = circleMarker(m).addTo(group);
+        mk.on('click', ()=>{
+          const panel = document.getElementById('panel');
+          const body = document.getElementById('panel-body');
+          const title = document.getElementById('panel-title');
+          const note = document.getElementById('panel-note');
+          title.textContent = m.name;
+          body.innerHTML = panelHtml(m);
+          updateRiskChart(m);
+          note.textContent = 'Live model demo. Contact us to connect your site for production.';
+          panel.style.display = 'block';
+        });
+        mk.bindTooltip(`${m.name} — ${m.company}`, { direction:'top', offset:[0,-8] });
+        markers.push(mk);
+      });
+
+      if(filtered.length===0){
+        document.getElementById('panel').style.display='none';
+      }
+    }
+
+    // Initialize the application
+    function initApp() {
+      applyFilters();
+
+      // Add event listeners for filters
+      document.getElementById('f-ok').addEventListener('change', applyFilters);
+      document.getElementById('f-warn').addEventListener('change', applyFilters);
+      document.getElementById('f-risk').addEventListener('change', applyFilters);
+      document.getElementById('f-unknown').addEventListener('change', applyFilters);
+      document.getElementById('region').addEventListener('change', applyFilters);
+
+      // Fit to results button
+      document.getElementById('fitAll').addEventListener('click', ()=>{
+        const bounds = group.getBounds();
+        if(bounds.isValid()) map.fitBounds(bounds.pad(0.2));
+      });
+
+      // Refresh data function
+      document.getElementById('refreshData').addEventListener('click', function() {
+        const spinner = document.getElementById('refreshSpinner');
+        const text = document.getElementById('refreshText');
+        
+        spinner.style.display = 'inline-block';
+        text.textContent = 'Refreshing...';
+        this.disabled = true;
+        
+        // Simulate API call
+        setTimeout(() => {
+          console.log('Data refreshed from server');
+          
+          spinner.style.display = 'none';
+          text.textContent = 'Refresh data';
+          this.disabled = false;
+          
+          // Show notification
+          const notification = document.createElement('div');
+          notification.textContent = 'Data updated successfully';
+          notification.style.position = 'fixed';
+          notification.style.bottom = '20px';
+          notification.style.right = '20px';
+          notification.style.background = 'var(--ok)';
+          notification.style.color = 'white';
+          notification.style.padding = '10px 15px';
+          notification.style.borderRadius = '5px';
+          notification.style.zIndex = '1000';
+          document.body.appendChild(notification);
+          
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 3000);
+        }, 1500);
+      });
+
+      // Helpful default view
+      setTimeout(()=>{
+        const bounds = group.getBounds();
+        if(bounds.isValid()) map.fitBounds(bounds.pad(0.2));
+      }, 300);
+
+      // Close panel on map click
+      map.on('click', ()=>{ document.getElementById('panel').style.display='none'; });
+
+      // Keyboard focus styles for accessibility
+      document.addEventListener('keydown', e=>{
+        if(e.key==='Escape'){ document.getElementById('panel').style.display='none'; }
+      });
+
+      // Login form submission
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        const success = await login(email, password);
+        if (success) {
+          hideLoginModal();
+          document.getElementById('logoutBtn').style.display = 'block';
+          loadMineData();
+        } else {
+          alert('Login failed. Please check your credentials.');
+        }
+      });
+
+      // Register form submission
+      document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('registerName').value;
+        const company = document.getElementById('registerCompany').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        
+        const success = await register(name, company, email, password);
+        if (success) {
+          hideRegisterModal();
+          document.getElementById('logoutBtn').style.display = 'block';
+          loadMineData();
+        } else {
+          alert('Registration failed. Please try again.');
+        }
+      });
+
+      // Show register modal
+      document.getElementById('showRegister').addEventListener('click', (e) => {
+        e.preventDefault();
+        showRegisterModal();
+      });
+
+      // Show login modal
+      document.getElementById('showLogin').addEventListener('click', (e) => {
+        e.preventDefault();
+        hideRegisterModal();
+        showLoginModal();
+      });
+
+      // Logout button
+      document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        logout();
+      });
+    }
+
+    // Initialize the app when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
 </body>
 </html>
