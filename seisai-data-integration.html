@@ -23,6 +23,7 @@
             --radius: 14px;
             --radius-sm: 10px;
             --maxw: 1200px;
+            --transition: all 0.3s ease;
         }
 
         * {
@@ -99,6 +100,12 @@
             padding: 24px;
             margin-bottom: 20px;
             box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
         }
 
         .api-controls {
@@ -121,7 +128,8 @@
             color: var(--text);
             box-shadow: var(--shadow);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: var(--transition);
+            gap: 8px;
         }
 
         .btn-primary {
@@ -136,6 +144,12 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .data-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -146,6 +160,14 @@
         @media (max-width: 768px) {
             .data-section {
                 grid-template-columns: 1fr;
+            }
+            
+            .api-controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
             }
         }
 
@@ -160,6 +182,11 @@
         .data-item {
             padding: 12px;
             border-bottom: 1px solid var(--stroke);
+            transition: var(--transition);
+        }
+
+        .data-item:hover {
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .data-item:last-child {
@@ -230,15 +257,23 @@
             display: block;
             margin-bottom: 5px;
             color: var(--muted);
+            font-weight: 500;
         }
 
-        input[type="text"] {
+        input[type="text"], .select {
             width: 100%;
             padding: 10px;
             border-radius: var(--radius-sm);
             border: 1px solid var(--stroke);
             background: var(--bg-soft);
             color: var(--text);
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus, .select:focus {
+            outline: none;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 2px rgba(18, 214, 223, 0.2);
         }
 
         .risk-low { color: var(--ok); }
@@ -271,12 +306,17 @@
             border-radius: var(--radius-sm);
             cursor: pointer;
             border: 1px solid var(--stroke);
+            transition: var(--transition);
         }
 
         .tab.active {
             background: var(--brand);
             color: #001518;
             border-color: var(--brand);
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .tab-content {
@@ -299,6 +339,12 @@
             border-radius: var(--radius-sm);
             padding: 15px;
             border: 1px solid var(--stroke);
+            transition: var(--transition);
+        }
+
+        .sensor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
         .sensor-value {
@@ -314,9 +360,159 @@
             margin-bottom: 15px;
             border: 1px solid var(--stroke);
         }
+        
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .preview-table th, .preview-table td {
+            border: 1px solid var(--stroke);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .preview-table th {
+            background: var(--bg-soft);
+            font-weight: 600;
+        }
+
+        .preview-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .risk-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .risk-badge.low { background: var(--ok); color: #000; }
+        .risk-badge.medium { background: var(--warn); color: #000; }
+        .risk-badge.high { background: var(--risk); color: #fff; }
+
+        .upload-success {
+            color: var(--ok);
+            padding: 10px;
+            background: rgba(30, 194, 139, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid var(--ok);
+        }
+
+        .upload-error {
+            color: var(--risk);
+            padding: 10px;
+            background: rgba(255, 92, 92, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid var(--risk);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            max-width: 400px;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: rgba(30, 194, 139, 0.1);
+            border-left: 4px solid var(--ok);
+            color: var(--ok);
+        }
+        
+        .notification.error {
+            background: rgba(255, 92, 92, 0.1);
+            border-left: 4px solid var(--risk);
+            color: var(--risk);
+        }
+        
+        .notification.info {
+            background: rgba(18, 214, 223, 0.1);
+            border-left: 4px solid var(--brand);
+            color: var(--brand);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--bg-soft);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--stroke);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--brand);
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--muted);
+        }
+        
+        .search-box {
+            margin-bottom: 15px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--stroke);
+            background: var(--bg-soft);
+            color: var(--text);
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-controls .btn {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
+    <div class="notification" id="notification"></div>
+    
     <div class="container">
         <header>
             <div class="logo">
@@ -380,21 +576,47 @@
                     <span class="status-indicator status-disconnected"></span>
                     Mine Sensor Network: Disconnected
                 </div>
+                <div class="data-item">
+                    <span class="status-indicator status-disconnected"></span>
+                    Rockfall Data: Not Loaded
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Dashboard Summary</h2>
+            <div class="stats-grid" id="dashboardStats">
+                <!-- Stats will be populated by JavaScript -->
             </div>
         </div>
 
         <div class="data-section">
             <div class="card">
                 <h2>Seismic Data</h2>
+                <div class="search-box">
+                    <input type="text" id="seismicSearch" placeholder="Search seismic events...">
+                </div>
+                <div class="filter-controls">
+                    <button class="btn active" data-filter="all">All</button>
+                    <button class="btn" data-filter="low">Low Risk</button>
+                    <button class="btn" data-filter="medium">Medium Risk</button>
+                    <button class="btn" data-filter="high">High Risk</button>
+                </div>
                 <div class="data-container" id="seismicData">
-                    <p>No seismic data available. Click "Get Seismic Data" to load information.</p>
+                    <div class="empty-state">
+                        <i>🌋</i>
+                        <p>No seismic data available. Click "Get Seismic Data" to load information.</p>
+                    </div>
                 </div>
             </div>
 
             <div class="card">
                 <h2>Weather Data</h2>
                 <div class="data-container" id="weatherData">
-                    <p>No weather data available. Click "Get Weather Data" to load information.</p>
+                    <div class="empty-state">
+                        <i>🌤️</i>
+                        <p>No weather data available. Click "Get Weather Data" to load information.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -403,7 +625,10 @@
             <div class="card">
                 <h2>Geological Survey Data</h2>
                 <div class="data-container" id="geoData">
-                    <p>No geological data available. Click "Get Geological Data" to load information.</p>
+                    <div class="empty-state">
+                        <i>⛰️</i>
+                        <p>No geological data available. Click "Get Geological Data" to load information.</p>
+                    </div>
                 </div>
             </div>
 
@@ -415,10 +640,16 @@
                 </div>
                 <div class="data-container" id="satelliteData">
                     <div class="tab-content active" id="insar-tab">
-                        <p>No InSAR data available. Click "Get Satellite Data" to load information.</p>
+                        <div class="empty-state">
+                            <i>🛰️</i>
+                            <p>No InSAR data available. Click "Get Satellite Data" to load information.</p>
+                        </div>
                     </div>
                     <div class="tab-content" id="satellite-tab">
-                        <p>No satellite imagery available. Click "Get Satellite Data" to load information.</p>
+                        <div class="empty-state">
+                            <i>📡</i>
+                            <p>No satellite imagery available. Click "Get Satellite Data" to load information.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -427,7 +658,89 @@
         <div class="card">
             <h2>Mine Sensor Data</h2>
             <div class="data-container" id="sensorData">
-                <p>No sensor data available. Click "Get Sensor Data" to load information.</p>
+                <div class="empty-state">
+                    <i>📊</i>
+                    <p>No sensor data available. Click "Get Sensor Data" to load information.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Rockfall Data</h2>
+            <div class="api-controls">
+                <button id="getRockfallData" class="btn">Get Rockfall Data</button>
+                <button id="uploadRockfallData" class="btn">Upload Rockfall Data</button>
+            </div>
+            <div class="data-container" id="rockfallData">
+                <div class="empty-state">
+                    <i>🪨</i>
+                    <p>No rockfall data available. Click "Get Rockfall Data" to load information.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Rockfall Risk Analysis</h2>
+            <div class="chart-container">
+                <canvas id="rockfallChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Upload Rockfall Dataset</h2>
+            <div class="config-panel">
+                <div class="form-group">
+                    <label for="mineSelect">Select Mine for Data Association:</label>
+                    <select id="mineSelect" class="select">
+                        <option value="">Loading mines...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="csvFile">Select CSV File:</label>
+                    <input type="file" id="csvFile" accept=".csv" style="display: none">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" id="browseBtn" class="btn">Browse CSV File</button>
+                        <span id="fileName" style="color: var(--muted);">No file selected</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>CSV Format Expected:</label>
+                    <div style="background: var(--bg-soft); padding: 10px; border-radius: 5px; font-size: 12px; margin-top: 5px;">
+                        <code>Rainfall(mm),Temperature(°C),Slope_Angle(deg),Seismic_Magnitude,Crack_Width(mm),Risk_Score,Risk_Level</code>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button id="uploadCsvBtn" class="btn btn-primary" disabled>Upload and Process CSV</button>
+                    <button id="previewCsvBtn" class="btn" disabled>Preview Data</button>
+                </div>
+            </div>
+            
+            <!-- Preview Table -->
+            <div id="previewSection" style="display: none; margin-top: 20px;">
+                <h3>Data Preview (First 10 rows)</h3>
+                <div id="previewTable" style="overflow-x: auto;"></div>
+                <div style="margin-top: 10px;">
+                    <button id="confirmUploadBtn" class="btn btn-primary" style="display: none;">Confirm Upload</button>
+                    <button id="cancelPreviewBtn" class="btn">Cancel</button>
+                </div>
+            </div>
+            
+            <!-- Upload Progress -->
+            <div id="uploadProgress" style="display: none; margin-top: 20px;">
+                <h3>Upload Progress</h3>
+                <div style="background: var(--bg-soft); border-radius: 5px; padding: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Processing data...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div style="background: var(--stroke); height: 10px; border-radius: 5px; overflow: hidden;">
+                        <div id="progressBar" style="background: var(--brand); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+                <div id="uploadStatus" style="margin-top: 10px;"></div>
             </div>
         </div>
 
@@ -448,712 +761,1389 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Enhanced API configuration
-        const API_CONFIG = {
-            usgs: {
-                baseUrl: 'https://earthquake.usgs.gov/fdsnws/event/1/query',
-                formats: ['geojson', 'xml', 'csv', 'text'],
-                defaultParams: {
-                    format: 'geojson',
-                    limit: 20,
-                    orderby: 'time'
+        // Application Configuration
+        const CONFIG = {
+            API: {
+                USGS: {
+                    baseUrl: 'https://earthquake.usgs.gov/fdsnws/event/1/query',
+                    defaultParams: {
+                        format: 'geojson',
+                        limit: 20,
+                        orderby: 'time'
+                    }
+                },
+                OPEN_WEATHER: {
+                    baseUrl: 'https://api.openweathermap.org/data/2.5',
+                    endpoints: {
+                        current: '/weather',
+                        forecast: '/forecast',
+                        onecall: '/onecall'
+                    }
+                },
+                ROCKFALL: {
+                    baseUrl: '/api',
+                    endpoints: {
+                        data: '/rockfall-data',
+                        upload: '/rockfall-data',
+                        bulk: '/rockfall-data/bulk'
+                    }
                 }
             },
-            openWeather: {
-                baseUrl: 'https://api.openweathermap.org/data/2.5',
-                endpoints: {
-                    current: '/weather',
-                    forecast: '/forecast',
-                    onecall: '/onecall'
-                }
-            },
-            nationalGeo: {
-                // Placeholder for national geological survey API
-                baseUrl: 'https://api.national-geological-survey.example.com',
-                endpoints: {
-                    hazards: '/hazards',
-                    geology: '/geology'
-                }
-            },
-            satellite: {
-                // Placeholder for satellite data API
-                baseUrl: 'https://api.satellite-data.example.com',
-                endpoints: {
-                    insar: '/insar',
-                    imagery: '/imagery'
-                }
-            },
-            mineSensors: {
-                // Placeholder for mine sensor data API
-                baseUrl: 'https://api.mine-sensors.example.com',
-                endpoints: {
-                    readings: '/readings'
-                }
+            MINE_LOCATIONS: [
+                { name: 'Chuquicamata Copper Mine', lat: -22.3, lon: -68.9 },
+                { name: 'Escondida Copper Mine', lat: -24.27, lon: -69.08 },
+                { name: 'Grasberg Mine', lat: -4.06, lon: 137.11 },
+                { name: 'Super Pit Gold Mine', lat: -30.75, lon: 121.47 }
+            ],
+            RISK_THRESHOLDS: {
+                LOW: 4.0,
+                MEDIUM: 5.0
             }
         };
 
-        // Application state
-        let appState = {
+        // Application State
+        const AppState = {
             apiKeys: {
                 usgs: '',
                 openWeather: '',
                 nationalGeo: '',
-                satellite: '',
-                mineSensors: ''
+                satellite: ''
             },
             connections: {
                 usgs: false,
                 openWeather: false,
                 nationalGeo: false,
                 satellite: false,
-                mineSensors: false
+                mineSensors: false,
+                rockfall: false
             },
-            seismicData: [],
-            weatherData: {},
-            geoData: [],
-            satelliteData: {},
-            sensorData: {},
-            map: null,
-            riskChart: null
+            data: {
+                seismic: [],
+                weather: [],
+                geo: [],
+                satellite: {},
+                sensor: {},
+                rockfall: []
+            },
+            ui: {
+                map: null,
+                riskChart: null,
+                rockfallChart: null,
+                activeFilters: {
+                    seismic: 'all'
+                }
+            }
         };
 
-        // DOM elements
-        const usgsApiKeyInput = document.getElementById('usgsApiKey');
-        const weatherApiKeyInput = document.getElementById('weatherApiKey');
-        const nationalGeoApiKeyInput = document.getElementById('nationalGeoApiKey');
-        const satelliteApiKeyInput = document.getElementById('satelliteApiKey');
-        const saveConfigBtn = document.getElementById('saveConfig');
-        const connectAllBtn = document.getElementById('connectAll');
-        const getSeismicDataBtn = document.getElementById('getSeismicData');
-        const getWeatherDataBtn = document.getElementById('getWeatherData');
-        const getGeoDataBtn = document.getElementById('getGeoData');
-        const getSatelliteDataBtn = document.getElementById('getSatelliteData');
-        const getSensorDataBtn = document.getElementById('getSensorData');
-        const apiStatusDiv = document.getElementById('apiStatus');
-        const seismicDataDiv = document.getElementById('seismicData');
-        const weatherDataDiv = document.getElementById('weatherData');
-        const geoDataDiv = document.getElementById('geoData');
-        const satelliteDataDiv = document.getElementById('satelliteData');
-        const sensorDataDiv = document.getElementById('sensorData');
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        // Initialize the map
-        function initMap() {
-            if (appState.map) return;
+        // UI Components
+        const UI = {
+            // DOM Elements
+            elements: {
+                // API Configuration
+                usgsApiKey: document.getElementById('usgsApiKey'),
+                weatherApiKey: document.getElementById('weatherApiKey'),
+                nationalGeoApiKey: document.getElementById('nationalGeoApiKey'),
+                satelliteApiKey: document.getElementById('satelliteApiKey'),
+                saveConfigBtn: document.getElementById('saveConfig'),
+                
+                // API Controls
+                connectAllBtn: document.getElementById('connectAll'),
+                getSeismicDataBtn: document.getElementById('getSeismicData'),
+                getWeatherDataBtn: document.getElementById('getWeatherData'),
+                getGeoDataBtn: document.getElementById('getGeoData'),
+                getSatelliteDataBtn: document.getElementById('getSatelliteData'),
+                getSensorDataBtn: document.getElementById('getSensorData'),
+                getRockfallDataBtn: document.getElementById('getRockfallData'),
+                uploadRockfallDataBtn: document.getElementById('uploadRockfallData'),
+                
+                // Status and Data Containers
+                apiStatus: document.getElementById('apiStatus'),
+                seismicData: document.getElementById('seismicData'),
+                weatherData: document.getElementById('weatherData'),
+                geoData: document.getElementById('geoData'),
+                satelliteData: document.getElementById('satelliteData'),
+                sensorData: document.getElementById('sensorData'),
+                rockfallData: document.getElementById('rockfallData'),
+                dashboardStats: document.getElementById('dashboardStats'),
+                
+                // Rockfall Upload
+                mineSelect: document.getElementById('mineSelect'),
+                csvFile: document.getElementById('csvFile'),
+                browseBtn: document.getElementById('browseBtn'),
+                fileName: document.getElementById('fileName'),
+                uploadCsvBtn: document.getElementById('uploadCsvBtn'),
+                previewCsvBtn: document.getElementById('previewCsvBtn'),
+                previewSection: document.getElementById('previewSection'),
+                previewTable: document.getElementById('previewTable'),
+                confirmUploadBtn: document.getElementById('confirmUploadBtn'),
+                cancelPreviewBtn: document.getElementById('cancelPreviewBtn'),
+                uploadProgress: document.getElementById('uploadProgress'),
+                progressBar: document.getElementById('progressBar'),
+                progressPercent: document.getElementById('progressPercent'),
+                uploadStatus: document.getElementById('uploadStatus'),
+                
+                // Search and Filter
+                seismicSearch: document.getElementById('seismicSearch'),
+                
+                // Notification
+                notification: document.getElementById('notification')
+            },
             
-            appState.map = L.map('map').setView([20, 0], 2);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(appState.map);
-        }
-
-        // Initialize the risk chart
-        function initRiskChart() {
-            const ctx = document.getElementById('riskChart').getContext('2d');
+            // Initialize UI components
+            init: function() {
+                this.initMap();
+                this.initCharts();
+                this.initTabs();
+                this.loadApiConfig();
+                this.updateApiStatus();
+                this.loadMines();
+                this.setupEventListeners();
+            },
             
-            if (appState.riskChart) {
-                appState.riskChart.destroy();
-            }
+            // Initialize the map
+            initMap: function() {
+                if (AppState.ui.map) return;
+                
+                AppState.ui.map = L.map('map').setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(AppState.ui.map);
+            },
             
-            appState.riskChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
-                    datasets: [{
-                        label: 'Mines by Risk Level',
-                        data: [12, 8, 4],
-                        backgroundColor: [
-                            'rgba(30, 194, 139, 0.7)',
-                            'rgba(255, 176, 32, 0.7)',
-                            'rgba(255, 92, 92, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(30, 194, 139, 1)',
-                            'rgba(255, 176, 32, 1)',
-                            'rgba(255, 92, 92, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Mines'
+            // Initialize charts
+            initCharts: function() {
+                this.initRiskChart();
+                this.initRockfallChart();
+            },
+            
+            // Initialize risk chart
+            initRiskChart: function() {
+                const ctx = document.getElementById('riskChart').getContext('2d');
+                
+                if (AppState.ui.riskChart) {
+                    AppState.ui.riskChart.destroy();
+                }
+                
+                AppState.ui.riskChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                        datasets: [{
+                            label: 'Mines by Risk Level',
+                            data: [0, 0, 0],
+                            backgroundColor: [
+                                'rgba(30, 194, 139, 0.7)',
+                                'rgba(255, 176, 32, 0.7)',
+                                'rgba(255, 92, 92, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(30, 194, 139, 1)',
+                                'rgba(255, 176, 32, 1)',
+                                'rgba(255, 92, 92, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Mines'
+                                }
                             }
                         }
                     }
+                });
+            },
+            
+            // Initialize rockfall chart
+            initRockfallChart: function() {
+                const ctx = document.getElementById('rockfallChart').getContext('2d');
+                
+                if (AppState.ui.rockfallChart) {
+                    AppState.ui.rockfallChart.destroy();
                 }
-            });
-        }
-
-        // Update API status display
-        function updateApiStatus() {
-            const usgsStatus = appState.connections.usgs ? 
-                '<span class="status-indicator status-connected"></span> USGS API: Connected' :
-                '<span class="status-indicator status-disconnected"></span> USGS API: Disconnected';
                 
-            const weatherStatus = appState.connections.openWeather ? 
-                '<span class="status-indicator status-connected"></span> OpenWeatherMap API: Connected' :
-                '<span class="status-indicator status-disconnected"></span> OpenWeatherMap API: Disconnected';
-                
-            const geoStatus = appState.connections.nationalGeo ? 
-                '<span class="status-indicator status-connected"></span> National Geological Survey API: Connected' :
-                '<span class="status-indicator status-disconnected"></span> National Geological Survey API: Disconnected';
-                
-            const satelliteStatus = appState.connections.satellite ? 
-                '<span class="status-indicator status-connected"></span> Satellite Data API: Connected' :
-                '<span class="status-indicator status-disconnected"></span> Satellite Data API: Disconnected';
-                
-            const sensorStatus = appState.connections.mineSensors ? 
-                '<span class="status-indicator status-connected"></span> Mine Sensor Network: Connected' :
-                '<span class="status-indicator status-disconnected"></span> Mine Sensor Network: Disconnected';
-                
-            apiStatusDiv.innerHTML = `
-                <div class="data-item">${usgsStatus}</div>
-                <div class="data-item">${weatherStatus}</div>
-                <div class="data-item">${geoStatus}</div>
-                <div class="data-item">${satelliteStatus}</div>
-                <div class="data-item">${sensorStatus}</div>
-            `;
-        }
-
-        // Tab switching functionality
-        function initTabs() {
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabId = tab.getAttribute('data-tab');
-                    
-                    // Update active tab
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    // Show corresponding content
-                    tabContents.forEach(content => {
-                        content.classList.remove('active');
-                        if (content.id === `${tabId}-tab`) {
-                            content.classList.add('active');
+                AppState.ui.rockfallChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: 'Risk Score',
+                                data: [],
+                                borderColor: 'rgb(255, 99, 132)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                yAxisID: 'y',
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Rainfall (mm)',
+                                data: [],
+                                borderColor: 'rgb(54, 162, 235)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                yAxisID: 'y1',
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Crack Width (mm)',
+                                data: [],
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                yAxisID: 'y1',
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Risk Score'
+                                },
+                                min: 0,
+                                max: 100
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Rainfall / Crack Width'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            }
                         }
+                    }
+                });
+            },
+            
+            // Initialize tab functionality
+            initTabs: function() {
+                const tabs = document.querySelectorAll('.tab');
+                const tabContents = document.querySelectorAll('.tab-content');
+                
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabId = tab.getAttribute('data-tab');
+                        
+                        // Update active tab
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        
+                        // Show corresponding content
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                            if (content.id === `${tabId}-tab`) {
+                                content.classList.add('active');
+                            }
+                        });
                     });
                 });
-            });
-        }
-
-        // Fetch seismic data from USGS API
-        async function fetchSeismicData() {
-            try {
-                getSeismicDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getSeismicDataBtn.disabled = true;
-                
-                const params = new URLSearchParams({
-                    ...API_CONFIG.usgs.defaultParams,
-                    minmagnitude: 2.5
-                });
-                
-                const response = await fetch(`${API_CONFIG.usgs.baseUrl}?${params}`);
-                
-                if (!response.ok) {
-                    throw new Error(`USGS API error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                appState.seismicData = data.features;
-                
-                displaySeismicData();
-                plotSeismicDataOnMap();
-                updateRiskAssessment();
-                
-                appState.connections.usgs = true;
-                updateApiStatus();
-                
-            } catch (error) {
-                console.error('Error fetching seismic data:', error);
-                seismicDataDiv.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-            } finally {
-                getSeismicDataBtn.innerHTML = 'Get Seismic Data';
-                getSeismicDataBtn.disabled = false;
-            }
-        }
-
-        // Display seismic data in the UI
-        function displaySeismicData() {
-            if (!appState.seismicData.length) {
-                seismicDataDiv.innerHTML = '<p>No seismic data available.</p>';
-                return;
-            }
+            },
             
-            let html = '';
-            appState.seismicData.slice(0, 10).forEach(event => {
-                const magnitude = event.properties.mag;
-                const place = event.properties.place;
-                const time = new Date(event.properties.time).toLocaleString();
-                const depth = event.geometry.coordinates[2];
+            // Setup event listeners
+            setupEventListeners: function() {
+                // API Configuration
+                this.elements.saveConfigBtn.addEventListener('click', () => this.saveApiConfig());
                 
-                let riskLevel = 'risk-low';
-                if (magnitude >= 5.0) riskLevel = 'risk-high';
-                else if (magnitude >= 4.0) riskLevel = 'risk-medium';
+                // API Controls
+                this.elements.connectAllBtn.addEventListener('click', () => this.connectToAllApis());
+                this.elements.getSeismicDataBtn.addEventListener('click', () => API.fetchSeismicData());
+                this.elements.getWeatherDataBtn.addEventListener('click', () => API.fetchWeatherData());
+                this.elements.getGeoDataBtn.addEventListener('click', () => API.fetchGeoData());
+                this.elements.getSatelliteDataBtn.addEventListener('click', () => API.fetchSatelliteData());
+                this.elements.getSensorDataBtn.addEventListener('click', () => API.fetchSensorData());
+                this.elements.getRockfallDataBtn.addEventListener('click', () => API.fetchRockfallData());
+                this.elements.uploadRockfallDataBtn.addEventListener('click', () => this.showNotification('Upload functionality would be implemented here', 'info'));
                 
-                html += `
+                // Rockfall Upload
+                this.elements.browseBtn.addEventListener('click', () => this.elements.csvFile.click());
+                this.elements.csvFile.addEventListener('change', (e) => this.handleFileSelect(e));
+                this.elements.uploadCsvBtn.addEventListener('click', () => this.uploadCSV());
+                this.elements.previewCsvBtn.addEventListener('click', () => this.previewCSV());
+                this.elements.confirmUploadBtn.addEventListener('click', () => this.confirmUpload());
+                this.elements.cancelPreviewBtn.addEventListener('click', () => this.cancelPreview());
+                
+                // Mine selection
+                this.elements.mineSelect.addEventListener('change', () => this.updateUploadButtonState());
+                
+                // Search and Filter
+                this.elements.seismicSearch.addEventListener('input', (e) => this.filterSeismicData(e.target.value));
+                
+                // Filter buttons
+                document.querySelectorAll('.filter-controls .btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.filter-controls .btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        AppState.ui.activeFilters.seismic = e.target.getAttribute('data-filter');
+                        this.filterSeismicData(this.elements.seismicSearch.value);
+                    });
+                });
+            },
+            
+            // Update API status display
+            updateApiStatus: function() {
+                const statusHTML = `
                     <div class="data-item">
-                        <div><strong>${place}</strong></div>
-                        <div>Magnitude: <span class="${riskLevel}">${magnitude}</span></div>
-                        <div>Depth: ${depth} km</div>
-                        <div>Time: ${time}</div>
+                        <span class="status-indicator ${AppState.connections.usgs ? 'status-connected' : 'status-disconnected'}"></span>
+                        USGS API: ${AppState.connections.usgs ? 'Connected' : 'Disconnected'}
+                    </div>
+                    <div class="data-item">
+                        <span class="status-indicator ${AppState.connections.openWeather ? 'status-connected' : 'status-disconnected'}"></span>
+                        OpenWeatherMap API: ${AppState.connections.openWeather ? 'Connected' : 'Disconnected'}
+                    </div>
+                    <div class="data-item">
+                        <span class="status-indicator ${AppState.connections.nationalGeo ? 'status-connected' : 'status-disconnected'}"></span>
+                        National Geological Survey API: ${AppState.connections.nationalGeo ? 'Connected' : 'Disconnected'}
+                    </div>
+                    <div class="data-item">
+                        <span class="status-indicator ${AppState.connections.satellite ? 'status-connected' : 'status-disconnected'}"></span>
+                        Satellite Data API: ${AppState.connections.satellite ? 'Connected' : 'Disconnected'}
+                    </div>
+                    <div class="data-item">
+                        <span class="status-indicator ${AppState.connections.mineSensors ? 'status-connected' : 'status-disconnected'}"></span>
+                        Mine Sensor Network: ${AppState.connections.mineSensors ? 'Connected' : 'Disconnected'}
+                    </div>
+                    <div class="data-item">
+                        <span class="status-indicator ${AppState.connections.rockfall ? 'status-connected' : 'status-disconnected'}"></span>
+                        Rockfall Data: ${AppState.connections.rockfall ? 'Loaded' : 'Not Loaded'}
                     </div>
                 `;
-            });
+                
+                this.elements.apiStatus.innerHTML = statusHTML;
+            },
             
-            seismicDataDiv.innerHTML = html;
-        }
-
-        // Plot seismic data on the map
-        function plotSeismicDataOnMap() {
-            if (!appState.map) initMap();
+            // Update dashboard statistics
+            updateDashboardStats: function() {
+                const statsHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Seismic Events</div>
+                        <div class="stat-value">${AppState.data.seismic.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Monitored Mines</div>
+                        <div class="stat-value">${CONFIG.MINE_LOCATIONS.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Rockfall Records</div>
+                        <div class="stat-value">${AppState.data.rockfall.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">High Risk Areas</div>
+                        <div class="stat-value" style="color: var(--risk);">${this.calculateHighRiskAreas()}</div>
+                    </div>
+                `;
+                
+                this.elements.dashboardStats.innerHTML = statsHTML;
+            },
             
-            // Clear existing markers
-            appState.map.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
-                    appState.map.removeLayer(layer);
+            // Calculate high risk areas
+            calculateHighRiskAreas: function() {
+                let highRiskCount = 0;
+                
+                // Count high risk seismic events
+                highRiskCount += AppState.data.seismic.filter(event => 
+                    event.properties.mag >= CONFIG.RISK_THRESHOLDS.MEDIUM
+                ).length;
+                
+                // Count high risk geological areas
+                highRiskCount += AppState.data.geo.filter(area => 
+                    area.hazardLevel === "High"
+                ).length;
+                
+                return highRiskCount;
+            },
+            
+            // Show notification
+            showNotification: function(message, type = 'info') {
+                const notification = this.elements.notification;
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 5000);
+            },
+            
+            // Handle file selection for CSV upload
+            handleFileSelect: function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    this.elements.fileName.textContent = file.name;
+                    this.elements.fileName.style.color = 'var(--text)';
+                    this.updateUploadButtonState();
                 }
-            });
+            },
             
-            // Add new markers
-            appState.seismicData.forEach(event => {
-                const [lng, lat, depth] = event.geometry.coordinates;
-                const magnitude = event.properties.mag;
-                const place = event.properties.place;
+            // Update upload button state based on selection
+            updateUploadButtonState: function() {
+                const mineId = this.elements.mineSelect.value;
+                const fileSelected = this.elements.csvFile.files.length > 0;
                 
-                let color = '#1ec28b'; // Green for low risk
-                if (magnitude >= 5.0) color = '#ff5c5c'; // Red for high risk
-                else if (magnitude >= 4.0) color = '#ffb020'; // Orange for medium risk
-                
-                const marker = L.circleMarker([lat, lng], {
-                    radius: magnitude * 2,
-                    fillColor: color,
-                    color: '#000',
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                }).addTo(appState.map);
-                
-                marker.bindPopup(`
-                    <strong>${place}</strong><br>
-                    Magnitude: ${magnitude}<br>
-                    Depth: ${depth} km
-                `);
-            });
-            
-            // Fit map to show all markers
-            if (appState.seismicData.length > 0) {
-                const group = new L.featureGroup(
-                    appState.seismicData.map(event => {
-                        const [lng, lat] = event.geometry.coordinates;
-                        return L.marker([lat, lng]);
-                    })
-                );
-                appState.map.fitBounds(group.getBounds().pad(0.1));
-            }
-        }
-
-        // Fetch weather data from OpenWeatherMap API
-        async function fetchWeatherData() {
-            try {
-                const apiKey = appState.apiKeys.openWeather;
-                if (!apiKey) {
-                    throw new Error('OpenWeatherMap API key is required');
+                if (mineId && fileSelected) {
+                    this.elements.uploadCsvBtn.disabled = false;
+                    this.elements.previewCsvBtn.disabled = false;
+                } else {
+                    this.elements.uploadCsvBtn.disabled = true;
+                    this.elements.previewCsvBtn.disabled = true;
                 }
+            },
+            
+            // Save API configuration
+            saveApiConfig: function() {
+                AppState.apiKeys.usgs = this.elements.usgsApiKey.value;
+                AppState.apiKeys.openWeather = this.elements.weatherApiKey.value;
+                AppState.apiKeys.nationalGeo = this.elements.nationalGeoApiKey.value;
+                AppState.apiKeys.satellite = this.elements.satelliteApiKey.value;
                 
-                getWeatherDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getWeatherDataBtn.disabled = true;
+                localStorage.setItem('seisai_api_keys', JSON.stringify(AppState.apiKeys));
+                this.showNotification('API configuration saved successfully!', 'success');
+            },
+            
+            // Load saved API configuration
+            loadApiConfig: function() {
+                const savedConfig = localStorage.getItem('seisai_api_keys');
+                if (savedConfig) {
+                    AppState.apiKeys = JSON.parse(savedConfig);
+                    this.elements.usgsApiKey.value = AppState.apiKeys.usgs;
+                    this.elements.weatherApiKey.value = AppState.apiKeys.openWeather;
+                    this.elements.nationalGeoApiKey.value = AppState.apiKeys.nationalGeo;
+                    this.elements.satelliteApiKey.value = AppState.apiKeys.satellite;
+                }
+            },
+            
+            // Load mines for selection
+            loadMines: function() {
+                // Simulate API call to load mines
+                setTimeout(() => {
+                    const mockMines = [
+                        { id: 1, name: 'Chuquicamata Copper Mine', company: 'Codelco' },
+                        { id: 2, name: 'Escondida Copper Mine', company: 'BHP' },
+                        { id: 3, name: 'Grasberg Mine', company: 'Freeport-McMoRan' },
+                        { id: 4, name: 'Super Pit Gold Mine', company: 'Northern Star' }
+                    ];
+                    
+                    this.elements.mineSelect.innerHTML = '<option value="">Select a mine</option>' +
+                        mockMines.map(mine => 
+                            `<option value="${mine.id}">${mine.name} (${mine.company})</option>`
+                        ).join('');
+                }, 500);
+            },
+            
+            // Connect to all APIs
+            connectToAllApis: async function() {
+                this.setButtonLoading(this.elements.connectAllBtn, true);
                 
-                // For demo purposes, we'll use predefined locations of major mines
-                const mineLocations = [
-                    { name: 'Chuquicamata Copper Mine', lat: -22.3, lon: -68.9 },
-                    { name: 'Escondida Copper Mine', lat: -24.27, lon: -69.08 },
-                    { name: 'Grasberg Mine', lat: -4.06, lon: 137.11 },
-                    { name: 'Super Pit Gold Mine', lat: -30.75, lon: 121.47 }
-                ];
+                try {
+                    await API.fetchSeismicData();
+                    if (AppState.apiKeys.openWeather) {
+                        await API.fetchWeatherData();
+                    }
+                    await API.fetchGeoData();
+                    await API.fetchSatelliteData();
+                    await API.fetchSensorData();
+                    await API.fetchRockfallData();
+                    
+                    this.showNotification('All APIs connected successfully!', 'success');
+                } catch (error) {
+                    this.showNotification('Error connecting to some APIs: ' + error.message, 'error');
+                } finally {
+                    this.setButtonLoading(this.elements.connectAllBtn, false);
+                }
+            },
+            
+            // Set button loading state
+            setButtonLoading: function(button, isLoading) {
+                if (isLoading) {
+                    button.innerHTML = '<span class="loading"></span> Loading...';
+                    button.disabled = true;
+                } else {
+                    button.innerHTML = button.getAttribute('data-original-text') || button.textContent;
+                    button.disabled = false;
+                }
+            },
+            
+            // Filter seismic data based on search and filter criteria
+            filterSeismicData: function(searchTerm) {
+                let filteredData = AppState.data.seismic;
                 
-                const weatherPromises = mineLocations.map(async location => {
-                    const response = await fetch(
-                        `${API_CONFIG.openWeather.baseUrl}${API_CONFIG.openWeather.endpoints.current}?lat=${location.lat}&lon=${location.lon}&appid=${apiKey}&units=metric`
+                // Apply search filter
+                if (searchTerm) {
+                    filteredData = filteredData.filter(event => 
+                        event.properties.place.toLowerCase().includes(searchTerm.toLowerCase())
                     );
+                }
+                
+                // Apply risk filter
+                if (AppState.ui.activeFilters.seismic !== 'all') {
+                    filteredData = filteredData.filter(event => {
+                        const magnitude = event.properties.mag;
+                        
+                        if (AppState.ui.activeFilters.seismic === 'low') {
+                            return magnitude < CONFIG.RISK_THRESHOLDS.LOW;
+                        } else if (AppState.ui.activeFilters.seismic === 'medium') {
+                            return magnitude >= CONFIG.RISK_THRESHOLDS.LOW && magnitude < CONFIG.RISK_THRESHOLDS.MEDIUM;
+                        } else if (AppState.ui.activeFilters.seismic === 'high') {
+                            return magnitude >= CONFIG.RISK_THRESHOLDS.MEDIUM;
+                        }
+                        
+                        return true;
+                    });
+                }
+                
+                this.displaySeismicData(filteredData);
+            },
+            
+            // Display seismic data in the UI
+            displaySeismicData: function(data = null) {
+                const seismicData = data || AppState.data.seismic;
+                const container = this.elements.seismicData;
+                
+                if (!seismicData.length) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i>🌋</i>
+                            <p>No seismic data available matching your criteria.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                seismicData.slice(0, 10).forEach(event => {
+                    const magnitude = event.properties.mag;
+                    const place = event.properties.place;
+                    const time = new Date(event.properties.time).toLocaleString();
+                    const depth = event.geometry.coordinates[2];
+                    
+                    let riskLevel = 'risk-low';
+                    if (magnitude >= CONFIG.RISK_THRESHOLDS.MEDIUM) riskLevel = 'risk-high';
+                    else if (magnitude >= CONFIG.RISK_THRESHOLDS.LOW) riskLevel = 'risk-medium';
+                    
+                    html += `
+                        <div class="data-item">
+                            <div><strong>${place}</strong></div>
+                            <div>Magnitude: <span class="${riskLevel}">${magnitude}</span></div>
+                            <div>Depth: ${depth} km</div>
+                            <div>Time: ${time}</div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            // Display weather data in the UI
+            displayWeatherData: function() {
+                const container = this.elements.weatherData;
+                
+                if (!AppState.data.weather.length) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i>🌤️</i>
+                            <p>No weather data available.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                AppState.data.weather.forEach((weather, index) => {
+                    const mineName = CONFIG.MINE_LOCATIONS[index].name;
+                    const temp = weather.main.temp;
+                    const humidity = weather.main.humidity;
+                    const conditions = weather.weather[0].description;
+                    const windSpeed = weather.wind.speed;
+                    
+                    html += `
+                        <div class="data-item">
+                            <div><strong>${mineName}</strong></div>
+                            <div>Temperature: ${temp}°C</div>
+                            <div>Humidity: ${humidity}%</div>
+                            <div>Conditions: ${conditions}</div>
+                            <div>Wind Speed: ${windSpeed} m/s</div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            // Display geological data in the UI
+            displayGeoData: function() {
+                const container = this.elements.geoData;
+                
+                if (!AppState.data.geo.length) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i>⛰️</i>
+                            <p>No geological data available.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                AppState.data.geo.forEach(geo => {
+                    let riskClass = 'risk-low';
+                    if (geo.hazardLevel === "High") riskClass = 'risk-high';
+                    else if (geo.hazardLevel === "Medium") riskClass = 'risk-medium';
+                    
+                    html += `
+                        <div class="data-item">
+                            <div><strong>${geo.region}</strong></div>
+                            <div>Rock Type: ${geo.rockType}</div>
+                            <div>Hazard Level: <span class="${riskClass}">${geo.hazardLevel}</span></div>
+                            <div>Stability: ${geo.stability}</div>
+                            <div>Last Survey: ${geo.lastSurvey}</div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            // Display satellite data in the UI
+            displaySatelliteData: function() {
+                if (!AppState.data.satellite.insar) {
+                    document.querySelector('#insar-tab').innerHTML = `
+                        <div class="empty-state">
+                            <i>🛰️</i>
+                            <p>No InSAR data available.</p>
+                        </div>
+                    `;
+                    document.querySelector('#satellite-tab').innerHTML = `
+                        <div class="empty-state">
+                            <i>📡</i>
+                            <p>No satellite imagery available.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Display InSAR data
+                let insarHtml = '';
+                AppState.data.satellite.insar.forEach(insar => {
+                    insarHtml += `
+                        <div class="data-item">
+                            <div><strong>${insar.location}</strong></div>
+                            <div>Displacement: ${insar.displacement}</div>
+                            <div>Period: ${insar.period}</div>
+                            <div>Trend: ${insar.trend}</div>
+                        </div>
+                    `;
+                });
+                document.querySelector('#insar-tab').innerHTML = insarHtml;
+                
+                // Display satellite imagery (placeholder)
+                document.querySelector('#satellite-tab').innerHTML = `
+                    <img src="https://via.placeholder.com/600x300/121821/12d6df?text=Satellite+Imagery+Placeholder" class="insar-image" alt="Satellite Imagery">
+                    <p>Satellite imagery showing mine area and surrounding terrain.</p>
+                    <p>Date: 2023-12-01 | Resolution: 30cm/pixel</p>
+                `;
+            },
+            
+            // Display sensor data in the UI
+            displaySensorData: function() {
+                const container = this.elements.sensorData;
+                
+                if (!AppState.data.sensor.sensors) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i>📊</i>
+                            <p>No sensor data available.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `<h3>${AppState.data.sensor.mine}</h3>`;
+                html += '<div class="sensor-grid">';
+                
+                AppState.data.sensor.sensors.forEach(sensor => {
+                    let statusClass = 'risk-low';
+                    if (sensor.status === "Warning") statusClass = 'risk-medium';
+                    else if (sensor.status === "Danger") statusClass = 'risk-high';
+                    
+                    html += `
+                        <div class="sensor-card">
+                            <div><strong>${sensor.type} Sensor</strong> (${sensor.id})</div>
+                            <div class="sensor-value">${sensor.value}</div>
+                            <div>Status: <span class="${statusClass}">${sensor.status}</span></div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+            },
+            
+            // Display rockfall data in the UI
+            displayRockfallData: function() {
+                const container = this.elements.rockfallData;
+                
+                if (!AppState.data.rockfall.length) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i>🪨</i>
+                            <p>No rockfall data available.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                AppState.data.rockfall.forEach(data => {
+                    let riskClass = 'risk-low';
+                    if (data.risk_level === "high") riskClass = 'risk-high';
+                    else if (data.risk_level === "medium") riskClass = 'risk-medium';
+                    
+                    html += `
+                        <div class="data-item">
+                            <div><strong>Recorded: ${new Date(data.recorded_at).toLocaleString()}</strong></div>
+                            <div>Rainfall: ${data.rainfall} mm</div>
+                            <div>Temperature: ${data.temperature}°C</div>
+                            <div>Slope Angle: ${data.slope_angle}°</div>
+                            <div>Seismic Magnitude: ${data.seismic_magnitude}</div>
+                            <div>Crack Width: ${data.crack_width} mm</div>
+                            <div>Risk Score: <span class="${riskClass}">${data.risk_score} (${data.risk_level})</span></div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            // Plot seismic data on the map
+            plotSeismicDataOnMap: function() {
+                if (!AppState.ui.map) this.initMap();
+                
+                // Clear existing markers
+                AppState.ui.map.eachLayer(layer => {
+                    if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+                        AppState.ui.map.removeLayer(layer);
+                    }
+                });
+                
+                // Add new markers
+                AppState.data.seismic.forEach(event => {
+                    const [lng, lat, depth] = event.geometry.coordinates;
+                    const magnitude = event.properties.mag;
+                    const place = event.properties.place;
+                    
+                    let color = '#1ec28b'; // Green for low risk
+                    if (magnitude >= CONFIG.RISK_THRESHOLDS.MEDIUM) color = '#ff5c5c'; // Red for high risk
+                    else if (magnitude >= CONFIG.RISK_THRESHOLDS.LOW) color = '#ffb020'; // Orange for medium risk
+                    
+                    const marker = L.circleMarker([lat, lng], {
+                        radius: magnitude * 2,
+                        fillColor: color,
+                        color: '#000',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(AppState.ui.map);
+                    
+                    marker.bindPopup(`
+                        <strong>${place}</strong><br>
+                        Magnitude: ${magnitude}<br>
+                        Depth: ${depth} km
+                    `);
+                });
+                
+                // Fit map to show all markers
+                if (AppState.data.seismic.length > 0) {
+                    const group = new L.featureGroup(
+                        AppState.data.seismic.map(event => {
+                            const [lng, lat] = event.geometry.coordinates;
+                            return L.marker([lat, lng]);
+                        })
+                    );
+                    AppState.ui.map.fitBounds(group.getBounds().pad(0.1));
+                }
+            },
+            
+            // Update risk assessment chart
+            updateRiskAssessment: function() {
+                if (!AppState.ui.riskChart) this.initRiskChart();
+                
+                // Calculate risk distribution based on available data
+                const lowRisk = 10 + Math.floor(Math.random() * 5);
+                const mediumRisk = 5 + Math.floor(Math.random() * 3);
+                const highRisk = 2 + Math.floor(Math.random() * 3);
+                
+                AppState.ui.riskChart.data.datasets[0].data = [lowRisk, mediumRisk, highRisk];
+                AppState.ui.riskChart.update();
+            },
+            
+            // Update rockfall chart
+            updateRockfallChart: function() {
+                if (!AppState.ui.rockfallChart) this.initRockfallChart();
+                
+                const labels = AppState.data.rockfall.map(d => new Date(d.recorded_at).toLocaleDateString());
+                const riskScores = AppState.data.rockfall.map(d => d.risk_score);
+                const rainfall = AppState.data.rockfall.map(d => d.rainfall);
+                const crackWidth = AppState.data.rockfall.map(d => d.crack_width);
+                
+                AppState.ui.rockfallChart.data.labels = labels;
+                AppState.ui.rockfallChart.data.datasets[0].data = riskScores;
+                AppState.ui.rockfallChart.data.datasets[1].data = rainfall;
+                AppState.ui.rockfallChart.data.datasets[2].data = crackWidth;
+                AppState.ui.rockfallChart.update();
+            },
+            
+            // CSV Upload functionality
+            previewCSV: function() {
+                const file = this.elements.csvFile.files[0];
+                const mineId = this.elements.mineSelect.value;
+                
+                if (!file || !mineId) {
+                    this.showNotification('Please select both a mine and a CSV file', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const csvText = e.target.result;
+                        const data = this.parseCSV(csvText);
+                        
+                        if (data.length === 0) {
+                            this.showNotification('No valid data found in CSV file', 'error');
+                            return;
+                        }
+                        
+                        this.displayPreview(data.slice(0, 10)); // Show first 10 rows
+                        this.elements.previewSection.style.display = 'block';
+                        this.elements.confirmUploadBtn.style.display = 'inline-block';
+                        
+                    } catch (error) {
+                        this.showNotification('Error parsing CSV: ' + error.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            },
+            
+            parseCSV: function(csvText) {
+                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                if (lines.length < 2) {
+                    throw new Error('CSV file is empty or has no data rows');
+                }
+                
+                // Extract headers and normalize them
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '_'));
+                
+                // Expected columns mapping
+                const expectedColumns = ['rainfall', 'temperature', 'slope_angle', 'seismic_magnitude', 'crack_width', 'risk_score', 'risk_level'];
+                
+                // Validate headers
+                const missingColumns = expectedColumns.filter(col => !headers.includes(col));
+                if (missingColumns.length > 0) {
+                    throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
+                }
+                
+                // Parse data rows
+                const data = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    if (values.length === headers.length) {
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header] = values[index];
+                        });
+                        
+                        // Validate and convert data types
+                        const validatedRow = this.validateRow(row);
+                        if (validatedRow) {
+                            data.push(validatedRow);
+                        }
+                    }
+                }
+                
+                return data;
+            },
+            
+            validateRow: function(row) {
+                try {
+                    // Convert numerical values
+                    const rainfall = parseFloat(row.rainfall);
+                    const temperature = parseFloat(row.temperature);
+                    const slope_angle = parseFloat(row.slope_angle);
+                    const seismic_magnitude = parseFloat(row.seismic_magnitude);
+                    const crack_width = parseFloat(row.crack_width);
+                    const risk_score = parseInt(row.risk_score);
+                    
+                    // Validate risk level
+                    const risk_level = row.risk_level.toLowerCase();
+                    if (!['low', 'medium', 'high'].includes(risk_level)) {
+                        console.warn('Invalid risk level:', row.risk_level);
+                        return null;
+                    }
+                    
+                    // Check for valid numbers
+                    if (isNaN(rainfall) || isNaN(temperature) || isNaN(slope_angle) || 
+                        isNaN(seismic_magnitude) || isNaN(crack_width) || isNaN(risk_score)) {
+                        console.warn('Invalid numerical values in row:', row);
+                        return null;
+                    }
+                    
+                    return {
+                        rainfall,
+                        temperature,
+                        slope_angle,
+                        seismic_magnitude,
+                        crack_width,
+                        risk_score,
+                        risk_level
+                    };
+                } catch (error) {
+                    console.warn('Error validating row:', error);
+                    return null;
+                }
+            },
+            
+            displayPreview: function(data) {
+                if (data.length === 0) {
+                    this.elements.previewTable.innerHTML = '<p>No valid data to display</p>';
+                    return;
+                }
+                
+                const headers = Object.keys(data[0]);
+                let html = `
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                ${headers.map(header => 
+                                    `<th>${header.replace(/_/g, ' ').toUpperCase()}</th>`
+                                ).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.forEach(row => {
+                    html += '<tr>';
+                    headers.forEach(header => {
+                        let value = row[header];
+                        if (header === 'risk_level') {
+                            value = `<span class="risk-badge ${value}">${value}</span>`;
+                        } else if (typeof value === 'number') {
+                            value = value.toFixed(2);
+                        }
+                        html += `<td>${value}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                this.elements.previewTable.innerHTML = html;
+            },
+            
+            uploadCSV: function() {
+                const file = this.elements.csvFile.files[0];
+                const mineId = this.elements.mineSelect.value;
+                
+                if (!file || !mineId) {
+                    this.showNotification('Please select both a mine and a CSV file', 'error');
+                    return;
+                }
+
+                try {
+                    this.elements.uploadProgress.style.display = 'block';
+                    this.elements.uploadStatus.innerHTML = '';
+                    
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const csvText = e.target.result;
+                            const data = this.parseCSV(csvText);
+                            
+                            if (data.length === 0) {
+                                throw new Error('No valid data found in CSV file');
+                            }
+                            
+                            // Add mine_id and timestamp to each record
+                            const records = data.map(record => ({
+                                ...record,
+                                mine_id: mineId,
+                                recorded_at: new Date().toISOString()
+                            }));
+                            
+                            // Simulate upload (in a real app, this would send to a server)
+                            await this.simulateUpload(records);
+                            
+                        } catch (error) {
+                            this.elements.uploadStatus.innerHTML = `<div class="upload-error">Error: ${error.message}</div>`;
+                        }
+                    };
+                    reader.readAsText(file);
+                    
+                } catch (error) {
+                    this.elements.uploadStatus.innerHTML = `<div class="upload-error">Error: ${error.message}</div>`;
+                }
+            },
+            
+            simulateUpload: async function(records) {
+                // Simulate upload process with progress
+                const totalRecords = records.length;
+                let processed = 0;
+                
+                for (let i = 0; i < records.length; i += 10) {
+                    // Simulate API call delay
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    processed = Math.min(i + 10, totalRecords);
+                    const progress = (processed / totalRecords) * 100;
+                    this.elements.progressBar.style.width = `${progress}%`;
+                    this.elements.progressPercent.textContent = `${Math.round(progress)}%`;
+                }
+                
+                // Add uploaded data to app state
+                AppState.data.rockfall = [...AppState.data.rockfall, ...records];
+                AppState.connections.rockfall = true;
+                
+                this.elements.uploadStatus.innerHTML = `
+                    <div class="upload-success">
+                        Successfully uploaded ${records.length} records! 
+                        <a href="#" onclick="API.fetchRockfallData(); return false;">Click here to refresh the data.</a>
+                    </div>
+                `;
+                
+                this.updateApiStatus();
+                this.updateDashboardStats();
+                this.displayRockfallData();
+                this.updateRockfallChart();
+                
+                this.showNotification(`Successfully uploaded ${records.length} rockfall records`, 'success');
+            },
+            
+            confirmUpload: function() {
+                this.elements.previewSection.style.display = 'none';
+                this.uploadCSV();
+            },
+            
+            cancelPreview: function() {
+                this.elements.previewSection.style.display = 'none';
+                this.elements.confirmUploadBtn.style.display = 'none';
+            }
+        };
+
+        // API Functions
+        const API = {
+            // Fetch seismic data from USGS API
+            fetchSeismicData: async function() {
+                UI.setButtonLoading(UI.elements.getSeismicDataBtn, true);
+                
+                try {
+                    const params = new URLSearchParams({
+                        ...CONFIG.API.USGS.defaultParams,
+                        minmagnitude: 2.5
+                    });
+                    
+                    const response = await fetch(`${CONFIG.API.USGS.baseUrl}?${params}`);
                     
                     if (!response.ok) {
-                        throw new Error(`OpenWeatherMap API error: ${response.status}`);
+                        throw new Error(`USGS API error: ${response.status}`);
                     }
                     
-                    return await response.json();
-                });
-                
-                const weatherResults = await Promise.all(weatherPromises);
-                appState.weatherData = weatherResults;
-                
-                displayWeatherData();
-                
-                appState.connections.openWeather = true;
-                updateApiStatus();
-                
-            } catch (error) {
-                console.error('Error fetching weather data:', error);
-                weatherDataDiv.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-            } finally {
-                getWeatherDataBtn.innerHTML = 'Get Weather Data';
-                getWeatherDataBtn.disabled = false;
-            }
-        }
-
-        // Display weather data in the UI
-        function displayWeatherData() {
-            if (!appState.weatherData.length) {
-                weatherDataDiv.innerHTML = '<p>No weather data available.</p>';
-                return;
-            }
-            
-            let html = '';
-            appState.weatherData.forEach((weather, index) => {
-                const mineName = [
-                    'Chuquicamata Copper Mine',
-                    'Escondida Copper Mine',
-                    'Grasberg Mine',
-                    'Super Pit Gold Mine'
-                ][index];
-                
-                const temp = weather.main.temp;
-                const humidity = weather.main.humidity;
-                const conditions = weather.weather[0].description;
-                const windSpeed = weather.wind.speed;
-                
-                html += `
-                    <div class="data-item">
-                        <div><strong>${mineName}</strong></div>
-                        <div>Temperature: ${temp}°C</div>
-                        <div>Humidity: ${humidity}%</div>
-                        <div>Conditions: ${conditions}</div>
-                        <div>Wind Speed: ${windSpeed} m/s</div>
-                    </div>
-                `;
-            });
-            
-            weatherDataDiv.innerHTML = html;
-        }
-
-        // Fetch geological survey data
-        async function fetchGeoData() {
-            try {
-                getGeoDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getGeoDataBtn.disabled = true;
-                
-                // Simulate API call with timeout
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                // Mock data for demonstration
-                const mockGeoData = [
-                    {
-                        region: "Andean Copper Belt",
-                        rockType: "Porphyry Copper",
-                        hazardLevel: "Medium",
-                        lastSurvey: "2023-11-15",
-                        stability: "Moderate"
-                    },
-                    {
-                        region: "Western Australian Craton",
-                        rockType: "Iron Formation",
-                        hazardLevel: "Low",
-                        lastSurvey: "2023-10-22",
-                        stability: "High"
-                    },
-                    {
-                        region: "African Copper Belt",
-                        rockType: "Sedimentary Copper",
-                        hazardLevel: "High",
-                        lastSurvey: "2023-12-05",
-                        stability: "Low"
-                    },
-                    {
-                        region: "Canadian Shield",
-                        rockType: "Precambrian Greenstone",
-                        hazardLevel: "Medium",
-                        lastSurvey: "2023-09-30",
-                        stability: "Moderate"
-                    }
-                ];
-                
-                appState.geoData = mockGeoData;
-                displayGeoData();
-                
-                appState.connections.nationalGeo = true;
-                updateApiStatus();
-                
-            } catch (error) {
-                console.error('Error fetching geological data:', error);
-                geoDataDiv.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-            } finally {
-                getGeoDataBtn.innerHTML = 'Get Geological Data';
-                getGeoDataBtn.disabled = false;
-            }
-        }
-
-        // Display geological data in the UI
-        function displayGeoData() {
-            if (!appState.geoData.length) {
-                geoDataDiv.innerHTML = '<p>No geological data available.</p>';
-                return;
-            }
-            
-            let html = '';
-            appState.geoData.forEach(geo => {
-                let riskClass = 'risk-low';
-                if (geo.hazardLevel === "High") riskClass = 'risk-high';
-                else if (geo.hazardLevel === "Medium") riskClass = 'risk-medium';
-                
-                html += `
-                    <div class="data-item">
-                        <div><strong>${geo.region}</strong></div>
-                        <div>Rock Type: ${geo.rockType}</div>
-                        <div>Hazard Level: <span class="${riskClass}">${geo.hazardLevel}</span></div>
-                        <div>Stability: ${geo.stability}</div>
-                        <div>Last Survey: ${geo.lastSurvey}</div>
-                    </div>
-                `;
-            });
-            
-            geoDataDiv.innerHTML = html;
-        }
-
-        // Fetch satellite and InSAR data
-        async function fetchSatelliteData() {
-            try {
-                getSatelliteDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getSatelliteDataBtn.disabled = true;
-                
-                // Simulate API call with timeout
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Mock data for demonstration
-                const mockInSARData = [
-                    {
-                        location: "Chuquicamata Mine, Chile",
-                        displacement: "12mm",
-                        period: "2023-10-01 to 2023-11-30",
-                        trend: "Subsidence"
-                    },
-                    {
-                        location: "Grasberg Mine, Indonesia",
-                        displacement: "8mm",
-                        period: "2023-10-15 to 2023-11-30",
-                        trend: "Stable"
-                    },
-                    {
-                        location: "Super Pit Mine, Australia",
-                        displacement: "18mm",
-                        period: "2023-09-01 to 2023-11-30",
-                        trend: "Uplift"
-                    }
-                ];
-                
-                appState.satelliteData = {
-                    insar: mockInSARData,
-                    imagery: "https://example.com/satellite-imagery/2023-12-01.png"
-                };
-                
-                displaySatelliteData();
-                
-                appState.connections.satellite = true;
-                updateApiStatus();
-                
-            } catch (error) {
-                console.error('Error fetching satellite data:', error);
-                document.querySelector('#insar-tab').innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-                document.querySelector('#satellite-tab').innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-            } finally {
-                getSatelliteDataBtn.innerHTML = 'Get Satellite Data';
-                getSatelliteDataBtn.disabled = false;
-            }
-        }
-
-        // Display satellite data in the UI
-        function displaySatelliteData() {
-            if (!appState.satelliteData.insar) {
-                document.querySelector('#insar-tab').innerHTML = '<p>No InSAR data available.</p>';
-                document.querySelector('#satellite-tab').innerHTML = '<p>No satellite imagery available.</p>';
-                return;
-            }
-            
-            // Display InSAR data
-            let insarHtml = '';
-            appState.satelliteData.insar.forEach(insar => {
-                insarHtml += `
-                    <div class="data-item">
-                        <div><strong>${insar.location}</strong></div>
-                        <div>Displacement: ${insar.displacement}</div>
-                        <div>Period: ${insar.period}</div>
-                        <div>Trend: ${insar.trend}</div>
-                    </div>
-                `;
-            });
-            document.querySelector('#insar-tab').innerHTML = insarHtml;
-            
-            // Display satellite imagery (placeholder)
-            document.querySelector('#satellite-tab').innerHTML = `
-                <img src="https://via.placeholder.com/600x300/121821/12d6df?text=Satellite+Imagery+Placeholder" class="insar-image" alt="Satellite Imagery">
-                <p>Satellite imagery showing mine area and surrounding terrain.</p>
-                <p>Date: 2023-12-01 | Resolution: 30cm/pixel</p>
-            `;
-        }
-
-        // Fetch mine sensor data
-        async function fetchSensorData() {
-            try {
-                getSensorDataBtn.innerHTML = '<span class="loading"></span> Loading...';
-                getSensorDataBtn.disabled = true;
-                
-                // Simulate API call with timeout
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Mock data for demonstration
-                const mockSensorData = {
-                    mine: "Chuquicamata Copper Mine",
-                    sensors: [
-                        { id: "S-001", type: "Vibration", value: "0.12g", status: "Normal" },
-                        { id: "S-002", type: "Groundwater", value: "42.5m", status: "Elevated" },
-                        { id: "S-003", type: "Slope", value: "2.7°", status: "Normal" },
-                        { id: "S-004", type: "Air Quality", value: "32ppm", status: "Warning" },
-                        { id: "S-005", type: "Structural", value: "0.8mm", status: "Normal" },
-                        { id: "S-006", type: "Seismic", value: "1.2ML", status: "Normal" }
-                    ]
-                };
-                
-                appState.sensorData = mockSensorData;
-                displaySensorData();
-                
-                appState.connections.mineSensors = true;
-                updateApiStatus();
-                
-            } catch (error) {
-                console.error('Error fetching sensor data:', error);
-                sensorDataDiv.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
-            } finally {
-                getSensorDataBtn.innerHTML = 'Get Sensor Data';
-                getSensorDataBtn.disabled = false;
-            }
-        }
-
-        // Display sensor data in the UI
-        function displaySensorData() {
-            if (!appState.sensorData.sensors) {
-                sensorDataDiv.innerHTML = '<p>No sensor data available.</p>';
-                return;
-            }
-            
-            let html = `<h3>${appState.sensorData.mine}</h3>`;
-            html += '<div class="sensor-grid">';
-            
-            appState.sensorData.sensors.forEach(sensor => {
-                let statusClass = 'risk-low';
-                if (sensor.status === "Warning") statusClass = 'risk-medium';
-                else if (sensor.status === "Danger") statusClass = 'risk-high';
-                
-                html += `
-                    <div class="sensor-card">
-                        <div><strong>${sensor.type} Sensor</strong> (${sensor.id})</div>
-                        <div class="sensor-value">${sensor.value}</div>
-                        <div>Status: <span class="${statusClass}">${sensor.status}</span></div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            sensorDataDiv.innerHTML = html;
-        }
-
-        // Update risk assessment based on all available data
-        function updateRiskAssessment() {
-            if (!appState.riskChart) initRiskChart();
-            
-            // Simulate risk assessment based on all data sources
-            const lowRisk = 10 + Math.floor(Math.random() * 5);
-            const mediumRisk = 5 + Math.floor(Math.random() * 3);
-            const highRisk = 2 + Math.floor(Math.random() * 3);
-            
-            appState.riskChart.data.datasets[0].data = [lowRisk, mediumRisk, highRisk];
-            appState.riskChart.update();
-        }
-
-        // Connect to all APIs
-        async function connectToAllApis() {
-            connectAllBtn.innerHTML = '<span class="loading"></span> Connecting...';
-            connectAllBtn.disabled = true;
-            
-            try {
-                await fetchSeismicData();
-                if (appState.apiKeys.openWeather) {
-                    await fetchWeatherData();
+                    const data = await response.json();
+                    AppState.data.seismic = data.features;
+                    
+                    UI.displaySeismicData();
+                    UI.plotSeismicDataOnMap();
+                    UI.updateRiskAssessment();
+                    UI.updateDashboardStats();
+                    
+                    AppState.connections.usgs = true;
+                    UI.updateApiStatus();
+                    
+                    UI.showNotification('Seismic data loaded successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Error fetching seismic data:', error);
+                    UI.elements.seismicData.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
+                    UI.showNotification('Error loading seismic data: ' + error.message, 'error');
+                } finally {
+                    UI.setButtonLoading(UI.elements.getSeismicDataBtn, false);
                 }
-                if (appState.apiKeys.nationalGeo) {
-                    await fetchGeoData();
+            },
+            
+            // Fetch weather data from OpenWeatherMap API
+            fetchWeatherData: async function() {
+                const apiKey = AppState.apiKeys.openWeather;
+                if (!apiKey) {
+                    UI.showNotification('OpenWeatherMap API key is required', 'error');
+                    return;
                 }
-                if (appState.apiKeys.satellite) {
-                    await fetchSatelliteData();
+                
+                UI.setButtonLoading(UI.elements.getWeatherDataBtn, true);
+                
+                try {
+                    const weatherPromises = CONFIG.MINE_LOCATIONS.map(async location => {
+                        const response = await fetch(
+                            `${CONFIG.API.OPEN_WEATHER.baseUrl}${CONFIG.API.OPEN_WEATHER.endpoints.current}?lat=${location.lat}&lon=${location.lon}&appid=${apiKey}&units=metric`
+                        );
+                        
+                        if (!response.ok) {
+                            throw new Error(`OpenWeatherMap API error: ${response.status}`);
+                        }
+                        
+                        return await response.json();
+                    });
+                    
+                    AppState.data.weather = await Promise.all(weatherPromises);
+                    UI.displayWeatherData();
+                    
+                    AppState.connections.openWeather = true;
+                    UI.updateApiStatus();
+                    
+                    UI.showNotification('Weather data loaded successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Error fetching weather data:', error);
+                    UI.elements.weatherData.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
+                    UI.showNotification('Error loading weather data: ' + error.message, 'error');
+                } finally {
+                    UI.setButtonLoading(UI.elements.getWeatherDataBtn, false);
                 }
-                await fetchSensorData();
-            } catch (error) {
-                console.error('Error connecting to APIs:', error);
-            } finally {
-                connectAllBtn.innerHTML = 'Connect to All APIs';
-                connectAllBtn.disabled = false;
+            },
+            
+            // Fetch geological survey data
+            fetchGeoData: async function() {
+                UI.setButtonLoading(UI.elements.getGeoDataBtn, true);
+                
+                try {
+                    // Simulate API call with timeout
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    // Mock data for demonstration
+                    const mockGeoData = [
+                        {
+                            region: "Andean Copper Belt",
+                            rockType: "Porphyry Copper",
+                            hazardLevel: "Medium",
+                            lastSurvey: "2023-11-15",
+                            stability: "Moderate"
+                        },
+                        {
+                            region: "Western Australian Craton",
+                            rockType: "Iron Formation",
+                            hazardLevel: "Low",
+                            lastSurvey: "2023-10-22",
+                            stability: "High"
+                        },
+                        {
+                            region: "African Copper Belt",
+                            rockType: "Sedimentary Copper",
+                            hazardLevel: "High",
+                            lastSurvey: "2023-12-05",
+                            stability: "Low"
+                        },
+                        {
+                            region: "Canadian Shield",
+                            rockType: "Precambrian Greenstone",
+                            hazardLevel: "Medium",
+                            lastSurvey: "2023-09-30",
+                            stability: "Moderate"
+                        }
+                    ];
+                    
+                    AppState.data.geo = mockGeoData;
+                    UI.displayGeoData();
+                    UI.updateDashboardStats();
+                    
+                    AppState.connections.nationalGeo = true;
+                    UI.updateApiStatus();
+                    
+                    UI.showNotification('Geological data loaded successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Error fetching geological data:', error);
+                    UI.elements.geoData.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
+                    UI.showNotification('Error loading geological data: ' + error.message, 'error');
+                } finally {
+                    UI.setButtonLoading(UI.elements.getGeoDataBtn, false);
+                }
+            },
+            
+            // Fetch satellite and InSAR data
+            fetchSatelliteData: async function() {
+                UI.setButtonLoading(UI.elements.getSatelliteDataBtn, true);
+                
+                try {
+                    // Simulate API call with timeout
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Mock data for demonstration
+                    const mockInSARData = [
+                        {
+                            location: "Chuquicamata Mine, Chile",
+                            displacement: "12mm",
+                            period: "2023-10-01 to 2023-11-30",
+                            trend: "Subsidence"
+                        },
+                        {
+                            location: "Grasberg Mine, Indonesia",
+                            displacement: "8mm",
+                            period: "2023-10-15 to 2023-11-30",
+                            trend: "Stable"
+                        },
+                        {
+                            location: "Super Pit Mine, Australia",
+                            displacement: "18mm",
+                            period: "2023-09-01 to 2023-11-30",
+                            trend: "Uplift"
+                        }
+                    ];
+                    
+                    AppState.data.satellite = {
+                        insar: mockInSARData,
+                        imagery: "https://example.com/satellite-imagery/2023-12-01.png"
+                    };
+                    
+                    UI.displaySatelliteData();
+                    
+                    AppState.connections.satellite = true;
+                    UI.updateApiStatus();
+                    
+                    UI.showNotification('Satellite data loaded successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Error fetching satellite data:', error);
+                    document.querySelector('#insar-tab').innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
+                    document.querySelector('#satellite-tab').innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
+                    UI.showNotification('Error loading satellite data: ' + error.message, 'error');
+                } finally {
+                    UI.setButtonLoading(UI.elements.getSatelliteDataBtn, false);
+                }
+            },
+            
+            // Fetch mine sensor data
+            fetchSensorData: async function() {
+                UI.setButtonLoading(UI.elements.getSensorDataBtn, true);
+                
+                try {
+                    // Simulate API call with timeout
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Mock data for demonstration
+                    const mockSensorData = {
+                        mine: "Chuquicamata Copper Mine",
+                        sensors: [
+                            { id: "S-001", type: "Vibration", value: "0.12g", status: "Normal" },
+                            { id: "S-002", type: "Groundwater", value: "42.5m", status: "Elevated" },
+                            { id: "S-003", type: "Slope", value: "2.7°", status: "Normal" },
+                            { id: "S-004", type: "Air Quality", value: "32ppm", status: "Warning" },
+                            { id: "S-005", type: "Structural", value: "0.8mm", status: "Normal" },
+                            { id: "S-006", type: "Seismic", value: "1.2ML", status: "Normal" }
+                        ]
+                    };
+                    
+                    AppState.data.sensor = mockSensorData;
+                    UI.displaySensorData();
+                    
+                    AppState.connections.mineSensors = true;
+                    UI.updateApiStatus();
+                    
+                    UI.showNotification('Sensor data loaded successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Error fetching sensor data:', error);
+                    UI.elements.sensorData.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
+                    UI.showNotification('Error loading sensor data: ' + error.message, 'error');
+                } finally {
+                    UI.setButtonLoading(UI.elements.getSensorDataBtn, false);
+                }
+            },
+            
+            // Fetch rockfall data
+            fetchRockfallData: async function() {
+                UI.setButtonLoading(UI.elements.getRockfallDataBtn, true);
+                
+                try {
+                    // For demo purposes, we'll use mock data
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Mock rockfall data
+                    const mockRockfallData = [
+                        {
+                            rainfall: 15.2,
+                            temperature: 25.6,
+                            slope_angle: 45.3,
+                            seismic_magnitude: 2.8,
+                            crack_width: 12.5,
+                            risk_score: 65,
+                            risk_level: "medium",
+                            recorded_at: "2023-12-01T10:30:00Z"
+                        },
+                        {
+                            rainfall: 8.7,
+                            temperature: 28.1,
+                            slope_angle: 42.8,
+                            seismic_magnitude: 1.5,
+                            crack_width: 8.3,
+                            risk_score: 42,
+                            risk_level: "medium",
+                            recorded_at: "2023-11-30T14:45:00Z"
+                        },
+                        {
+                            rainfall: 22.4,
+                            temperature: 22.3,
+                            slope_angle: 47.1,
+                            seismic_magnitude: 3.2,
+                            crack_width: 15.7,
+                            risk_score: 78,
+                            risk_level: "high",
+                            recorded_at: "2023-11-29T08:15:00Z"
+                        }
+                    ];
+                    
+                    AppState.data.rockfall = mockRockfallData;
+                    AppState.connections.rockfall = true;
+                    
+                    UI.updateApiStatus();
+                    UI.updateDashboardStats();
+                    UI.displayRockfallData();
+                    UI.updateRockfallChart();
+                    
+                    UI.showNotification('Rockfall data loaded successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Error fetching rockfall data:', error);
+                    UI.elements.rockfallData.innerHTML = `<p class="risk-high">Error: ${error.message}</p>`;
+                    UI.showNotification('Error loading rockfall data: ' + error.message, 'error');
+                } finally {
+                    UI.setButtonLoading(UI.elements.getRockfallDataBtn, false);
+                }
             }
-        }
+        };
 
-        // Save API configuration
-        function saveApiConfig() {
-            appState.apiKeys.usgs = usgsApiKeyInput.value;
-            appState.apiKeys.openWeather = weatherApiKeyInput.value;
-            appState.apiKeys.nationalGeo = nationalGeoApiKeyInput.value;
-            appState.apiKeys.satellite = satelliteApiKeyInput.value;
+        // Initialize the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            UI.init();
             
-            localStorage.setItem('seisai_api_keys', JSON.stringify(appState.apiKeys));
-            
-            alert('API configuration saved!');
-        }
-
-        // Load saved API configuration
-        function loadApiConfig() {
-            const savedConfig = localStorage.getItem('seisai_api_keys');
-            if (savedConfig) {
-                appState.apiKeys = JSON.parse(savedConfig);
-                usgsApiKeyInput.value = appState.apiKeys.usgs;
-                weatherApiKeyInput.value = appState.apiKeys.openWeather;
-                nationalGeoApiKeyInput.value = appState.apiKeys.nationalGeo;
-                satelliteApiKeyInput.value = appState.apiKeys.satellite;
-            }
-        }
-
-        // Initialize the application
-        function initApp() {
-            initMap();
-            initRiskChart();
-            initTabs();
-            loadApiConfig();
-            updateApiStatus();
-            
-            // Event listeners
-            saveConfigBtn.addEventListener('click', saveApiConfig);
-            connectAllBtn.addEventListener('click', connectToAllApis);
-            getSeismicDataBtn.addEventListener('click', fetchSeismicData);
-            getWeatherDataBtn.addEventListener('click', fetchWeatherData);
-            getGeoDataBtn.addEventListener('click', fetchGeoData);
-            getSatelliteDataBtn.addEventListener('click', fetchSatelliteData);
-            getSensorDataBtn.addEventListener('click', fetchSensorData);
-        }
-
-        // Start the application when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', initApp);
+            // Store original button texts for loading states
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.setAttribute('data-original-text', btn.innerHTML);
+            });
+        });
     </script>
 </body>
 </html>

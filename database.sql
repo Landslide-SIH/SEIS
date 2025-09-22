@@ -98,3 +98,19 @@ CREATE TABLE IF NOT EXISTS geological_data (
     survey_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add to the existing database.sql file
+CREATE TABLE IF NOT EXISTS rockfall_data (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    mine_id VARCHAR(50),
+    rainfall DECIMAL(5, 2),
+    temperature DECIMAL(5, 2),
+    slope_angle DECIMAL(5, 2),
+    seismic_magnitude DECIMAL(3, 1),
+    crack_width DECIMAL(5, 2),
+    risk_score INT,
+    risk_level ENUM('low', 'medium', 'high'),
+    recorded_at DATETIME,
+    FOREIGN KEY (mine_id) REFERENCES mines(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

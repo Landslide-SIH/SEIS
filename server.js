@@ -779,6 +779,197 @@ app.put('/api/alerts/:id/acknowledge', authenticateToken, async (req, res) => {
   }
 });
 
+// Add this endpoint to server.js (with other API endpoints)
+app.post('/api/rockfall-data', authenticateToken, async (req, res) => {
+  try {
+    const { mine_id, rainfall, temperature, slope_angle, seismic_magnitude, crack_width, risk_score, risk_level, recorded_at } = req.body;
+    
+    if (!mine_id || risk_score === undefined) {
+      return res.status(400).json({ error: 'Mine ID and risk score are required' });
+    }
+    
+    const [result] = await pool.execute(
+      `INSERT INTO rockfall_data (mine_id, rainfall, temperature, slope_angle, seismic_magnitude, crack_width, risk_score, risk_level, recorded_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [mine_id, rainfall, temperature, slope_angle, seismic_magnitude, crack_width, risk_score, risk_level, recorded_at || new Date()]
+    );
+    
+    res.status(201).json({
+      message: 'Rockfall data added successfully',
+      id: result.insertId
+    });
+  } catch (error) {
+    console.error('Error adding rockfall data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add this endpoint to get rockfall data
+app.get('/api/rockfall-data/:mineId', authenticateToken, async (req, res) => {
+  try {
+    const { mineId } = req.params;
+    const { limit = 100 } = req.query;
+    
+    const [rows] = await pool.execute(
+      'SELECT * FROM rockfall_data WHERE mine_id = ? ORDER BY recorded_at DESC LIMIT ?',
+      [mineId, parseInt(limit)]
+    );
+    
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching rockfall data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update the prediction endpoint to use rockfall data
+app.post('/api/predict/:mineId', authenticateToken, async (req, res) => {
+  try {
+    const { mineId } = req.params;
+    const { sensorData } = req.body;
+    
+    // Get mine data
+    const [mines] = await pool.execute('SELECT * FROM mines WHERE id = ?', [mineId]);
+    
+    if (mines.length === 0) {
+      return res.status(404).json({ error: 'Mine not found' });
+    }
+    
+    const mine = mines[0];
+    
+    // Get additional data for prediction
+    const [seismicRows] = await pool.execute(
+      `SELECT magnitude, depth, significance 
+       FROM seismic_data 
+       WHERE region LIKE ? 
+       ORDER BY time DESC LIMIT 10`,
+      [`%${mine.region}%`]
+    );
+    
+    const [weatherRows] = await pool.execute(
+      `SELECT temperature, rainfall, humidity, wind_speed, condition 
+       FROM weather_data 
+       WHERE mine_id = ? 
+       ORDER BY recorded_at DESC LIMIT 24`,
+      [mineId]
+    );
+    
+    const [geoRows] = await pool.execute(
+      `SELECT hazard_level, stability 
+       FROM geological_data 
+       WHERE region LIKE ? 
+       ORDER BY survey_date DESC LIMIT 1`,
+      [`%${mine.region}%`]
+    );
+    
+    // Get rockfall data for prediction
+    const [rockfallRows] = await pool.execute(
+      `SELECT rainfall, temperature, slope_angle, seismic_magnitude, crack_width, risk_score, risk_level
+       FROM rockfall_data 
+       WHERE mine_id = ? 
+       ORDER BY recorded_at DESC LIMIT 50`,
+      [mineId]
+    );
+    
+    // Enhanced risk prediction logic using rockfall data
+    let riskScore = Math.floor(Math.random() * 100);
+    
+    // If we have rockfall data, use it to influence the prediction
+    if (rockfallRows.length > 0) {
+      const recentRisk = rockfallRows[0].risk_score;
+      const avgRisk = rockfallRows.reduce((sum, row) => sum + row.risk_score, 0) / rockfallRows.length;
+      
+      // Weighted average of current prediction and historical data
+      riskScore = Math.floor((riskScore * 0.4) + (recentRisk * 0.3) + (avgRisk * 0.3));
+    }
+    
+    let riskLevel = 'low';
+    if (riskScore > 70) riskLevel = 'high';
+    else if (riskScore > 40) riskLevel = 'medium';
+    
+    const prediction = {
+      level: riskLevel,
+      riskScore: riskScore,
+      confidence: Math.floor(Math.random() * 100),
+      predictedTimeframe: `${Math.floor(Math.random() * 72) + 1} hours`
+    };
+    
+    // Store prediction in database
+    const [result] = await pool.execute(
+      `INSERT INTO predictions (mine_id, risk_level, risk_score, confidence, predicted_timeframe) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [mineId, prediction.level, prediction.riskScore, prediction.confidence, prediction.predictedTimeframe]
+    );
+    
+    // Create alert if risk is high
+    if (prediction.level === 'high') {
+      await pool.execute(
+        `INSERT INTO alerts (mine_id, alert_type, message, severity) 
+         VALUES (?, ?, ?, ?)`,
+        [mineId, 'risk_alert', `High risk predicted: ${prediction.predictedTimeframe}`, 'critical']
+      );
+    }
+    
+    res.json({
+      success: true,
+      prediction,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error generating prediction:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add this endpoint to server.js
+app.post('/api/rockfall-data/bulk', authenticateToken, async (req, res) => {
+    try {
+        const rockfallDataArray = req.body;
+        
+        if (!Array.isArray(rockfallDataArray)) {
+            return res.status(400).json({ error: 'Expected an array of rockfall data' });
+        }
+        
+        if (rockfallDataArray.length === 0) {
+            return res.status(400).json({ error: 'Empty data array' });
+        }
+        
+        const results = [];
+        for (const data of rockfallDataArray) {
+            const { mine_id, rainfall, temperature, slope_angle, seismic_magnitude, crack_width, risk_score, risk_level, recorded_at } = data;
+            
+            if (!mine_id || risk_score === undefined) {
+                results.push({ error: 'Mine ID and risk score are required' });
+                continue;
+            }
+            
+            try {
+                const [result] = await pool.execute(
+                    `INSERT INTO rockfall_data (mine_id, rainfall, temperature, slope_angle, seismic_magnitude, crack_width, risk_score, risk_level, recorded_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [mine_id, rainfall, temperature, slope_angle, seismic_magnitude, crack_width, risk_score, risk_level, recorded_at || new Date()]
+                );
+                
+                results.push({ success: true, id: result.insertId });
+            } catch (dbError) {
+                results.push({ error: dbError.message });
+            }
+        }
+        
+        const successful = results.filter(r => r.success).length;
+        const failed = results.filter(r => r.error).length;
+        
+        res.json({
+            message: `Upload completed: ${successful} successful, ${failed} failed`,
+            results: results
+        });
+        
+    } catch (error) {
+        console.error('Error bulk uploading rockfall data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`SEIS AI API server running on port ${port}`);
