@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SEIS AI — Rockfall Prediction & Alerts for Open‑Pit Mines</title>
+  <title>SEIS AI — Advanced Rockfall Prediction & Alerts for Open‑Pit Mines</title>
   <meta name="description" content="Predict rockfalls before they happen. SEIS AI provides early warnings, geotechnical insights, and real-time risk mapping for open-pit mines." />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
@@ -17,23 +17,31 @@
   <!-- Chart.js for data visualization -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <style>
     :root{
       --bg:#0b0f14;            /* charcoal */
       --bg-soft:#121821;       /* deep slate */
       --card:#0f1520;
+      --card-hover:#141d2a;
       --text:#e9edf3;          /* near-white */
       --muted:#9ba7b4;
       --brand:#12d6df;         /* teal/cyan */
+      --brand-glow:rgba(18,214,223,0.4);
       --accent:#ffd15c;        /* safety amber */
       --ok:#1ec28b;            /* green */
       --warn:#ffb020;          /* amber */
       --risk:#ff5c5c;          /* red */
       --stroke:#1f2a38;
+      --stroke-light:#2a3644;
       --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --shadow-light: 0 5px 15px rgba(0,0,0,.25);
       --radius: 14px;
       --radius-sm: 10px;
       --maxw: 1200px;
+      --transition: all 0.3s ease;
     }
 
     *{box-sizing:border-box}
@@ -42,15 +50,21 @@
       margin:0; background:linear-gradient(180deg,var(--bg),#0c1016 30%,var(--bg-soft));
       color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
       line-height:1.55;
+      overflow-x: hidden;
     }
-    a{color:var(--brand); text-decoration:none}
-    a:hover{opacity:.9}
+    a{color:var(--brand); text-decoration:none; transition: var(--transition);}
+    a:hover{opacity:.9; transform: translateY(-1px);}
 
     /* Header */
     .nav{
       position:sticky; top:0; z-index:1000; backdrop-filter: blur(10px);
-      background:linear-gradient(180deg,rgba(11,15,20,.9),rgba(11,15,20,.6));
+      background:linear-gradient(180deg,rgba(11,15,20,.95),rgba(11,15,20,.85));
       border-bottom:1px solid var(--stroke);
+      transition: var(--transition);
+    }
+    .nav.scrolled{
+      background:rgba(11,15,20,.98);
+      box-shadow: var(--shadow);
     }
     .nav-inner{
       display:flex; align-items:center; justify-content:space-between;
@@ -60,20 +74,40 @@
     .logo{
       width:36px; height:36px; border-radius:10px;
       background: radial-gradient(120% 120% at 20% 20%, var(--brand), #0cf, #035);
-      box-shadow: 0 6px 18px rgba(18,214,223,.35), inset 0 0 20px rgba(255,255,255,.08);
+      box-shadow: 0 6px 18px var(--brand-glow), inset 0 0 20px rgba(255,255,255,.08);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      overflow: hidden;
     }
+    .logo::after{
+      content: ""; position: absolute; width: 100%; height: 100%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 70%);
+    }
+    .logo i{color: rgba(255,255,255,0.9); font-size: 16px;}
     .brand h1{font-family:"Space Grotesk",Inter,sans-serif; font-size:18px; letter-spacing:.3px; margin:0}
     .nav-links{display:flex; gap:18px; align-items:center}
-    .nav-links a{color:var(--muted); font-weight:600; font-size:14px}
+    .nav-links a{color:var(--muted); font-weight:600; font-size:14px; position: relative;}
+    .nav-links a::after{
+      content: ""; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px;
+      background: var(--brand); transition: var(--transition);
+    }
+    .nav-links a:hover::after{width: 100%;}
     .btn{
       display:inline-grid; place-items:center; height:40px; padding:0 14px; border-radius:10px; font-weight:700; letter-spacing:.3px;
       border:1px solid var(--stroke); color:var(--text); background:linear-gradient(180deg,#111824,#0c121c);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-light); transition: var(--transition); cursor: pointer;
+    }
+    .btn:hover{
+      transform: translateY(-2px); box-shadow: var(--shadow);
+      border-color: var(--stroke-light);
     }
     .btn-primary{
       background:linear-gradient(180deg,var(--brand),#0fb7bf);
       color:#001518; border-color:transparent;
-      box-shadow: 0 6px 24px rgba(18,214,223,.45);
+      box-shadow: 0 6px 24px var(--brand-glow);
+    }
+    .btn-primary:hover{
+      box-shadow: 0 8px 30px var(--brand-glow);
     }
 
     /* Hero */
@@ -83,21 +117,45 @@
         radial-gradient(1200px 500px at 50% -10%, rgba(18,214,223,.15), transparent 60%),
         radial-gradient(800px 300px at 70% 10%, rgba(255,209,92,.10), transparent 60%);
     }
-    .hero-inner{max-width:var(--maxw); margin:0 auto; padding:80px 20px 40px}
+    .hero::before{
+      content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23121821' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      z-index: -1;
+    }
+    .hero-inner{max-width:var(--maxw); margin:0 auto; padding:80px 20px 40px; position: relative;}
     .eyebrow{display:inline-flex; align-items:center; gap:8px; color:var(--brand); font-weight:800; font-size:12px; letter-spacing:.2em; text-transform:uppercase}
     .hero h2{
       font-family:"Space Grotesk",Inter,sans-serif; font-size:48px; line-height:1.05; margin:14px 0 16px;
+      background: linear-gradient(135deg, #e9edf3 0%, #b8c5d6 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .hero p{color:var(--muted); font-size:18px; max-width:740px}
     .hero-ctas{display:flex; gap:12px; margin-top:20px; flex-wrap:wrap}
     .trust{display:flex; gap:20px; align-items:center; margin-top:28px; color:var(--muted); font-size:13px}
-    .trust .dot{width:8px; height:8px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px var(--ok)}
+    .trust .dot{width:8px; height:8px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px var(--ok); animation: pulse 2s infinite;}
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
     .hero-cards{
       display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:38px;
     }
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       border:1px solid var(--stroke); border-radius:var(--radius); padding:18px;
+      transition: var(--transition); position: relative; overflow: hidden;
+    }
+    .card::before{
+      content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+      transition: var(--transition);
+    }
+    .card:hover::before{left: 100%;}
+    .card:hover{
+      transform: translateY(-5px); border-color: var(--stroke-light);
+      box-shadow: var(--shadow);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
     }
     .card h3{margin:4px 0 6px; font-size:16px}
     .metric{font-weight:800; font-size:26px}
@@ -109,7 +167,7 @@
     .section p{color:var(--muted)}
     .map-wrap{
       margin-top:20px; background:var(--card); border:1px solid var(--stroke); border-radius:var(--radius);
-      overflow:hidden; box-shadow:var(--shadow);
+      overflow:hidden; box-shadow:var(--shadow); position: relative;
     }
     .map-toolbar{
       display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;
@@ -118,16 +176,23 @@
     .filters{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
     .chip{
       display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; border:1px solid var(--stroke);
-      background:#0b111a; color:var(--text); font-size:13px; cursor:pointer;
+      background:#0b111a; color:var(--text); font-size:13px; cursor:pointer; transition: var(--transition);
+    }
+    .chip:hover{
+      background: #0d1522; border-color: var(--stroke-light);
     }
     .chip input{accent-color:var(--brand)}
     .select{
-      background:#0c121b; border:1px solid var(--stroke); color:var(--text); border-radius:10px; padding:8px 10px; font-size:13px
+      background:#0c121b; border:1px solid var(--stroke); color:var(--text); border-radius:10px; padding:8px 10px; font-size:13px;
+      transition: var(--transition);
+    }
+    .select:focus{
+      outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-glow);
     }
     #map{height:540px; width:100%}
     .legend{
       position:absolute; right:16px; bottom:16px; background:#0b111a; border:1px solid var(--stroke); border-radius:12px; padding:10px 12px; color:var(--muted);
-      box-shadow:var(--shadow); font-size:12px
+      box-shadow:var(--shadow); font-size:12px; z-index: 400;
     }
     .legend .row{display:flex; gap:8px; align-items:center; margin:6px 0}
     .dot{width:10px; height:10px; border-radius:50%}
@@ -135,7 +200,12 @@
     .dot.unknown{background:#8092a6}
     .map-panel{
       position:absolute; left:16px; bottom:16px; width:360px; max-width:86vw; background:#0b111a; border:1px solid var(--stroke); border-radius:12px;
-      padding:14px; color:var(--text); box-shadow:var(--shadow); display:none;
+      padding:14px; color:var(--text); box-shadow:var(--shadow); display:none; z-index: 500;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
     .map-panel h4{margin:0 0 6px}
     .map-panel small{color:var(--muted)}
@@ -149,14 +219,26 @@
 
     /* Features */
     .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
-    .feature{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px solid var(--stroke); border-radius:var(--radius); padding:20px}
+    .feature{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px solid var(--stroke); border-radius:var(--radius); padding:20px; transition: var(--transition);}
+    .feature:hover{
+      transform: translateY(-5px); border-color: var(--stroke-light);
+      box-shadow: var(--shadow);
+    }
     .feature h4{margin:0 0 6px}
     .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:12px; background:#0c151f; border:1px solid var(--stroke); color:var(--muted)}
 
     /* Testimonials */
     .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
-    .quote{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px solid var(--stroke); border-radius:var(--radius); padding:18px}
-    blockquote{margin:0; color:#d9e3ef; font-size:16px}
+    .quote{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px solid var(--stroke); border-radius:var(--radius); padding:18px; transition: var(--transition);}
+    .quote:hover{
+      transform: translateY(-3px); border-color: var(--stroke-light);
+      box-shadow: var(--shadow-light);
+    }
+    blockquote{margin:0; color:#d9e3ef; font-size:16px; position: relative; padding-left: 20px;}
+    blockquote::before{
+      content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--brand);
+      border-radius: 2px;
+    }
 
     /* CTA band */
     .cta{
@@ -166,12 +248,23 @@
       border:1px solid var(--stroke); border-radius:var(--radius);
       padding:26px 20px;
       display:flex; align-items:center; justify-content:space-between; gap:16px;
+      position: relative; overflow: hidden;
     }
+    .cta::before{
+      content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(18,214,223,0.1) 0%, transparent 70%);
+      animation: rotate 15s linear infinite;
+    }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .cta > * {position: relative; z-index: 1;}
     .cta h4{margin:0; font-size:22px}
     .cta p{margin:0; color:var(--muted)}
 
     /* Footer */
-    footer{border-top:1px solid var(--stroke); padding:24px 20px; color:var(--muted)}
+    footer{border-top:1px solid var(--stroke); padding:24px 20px; color:var(--muted); background: var(--bg-soft);}
     .foot{max-width:var(--maxw); margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px}
 
     /* Loading spinner */
@@ -198,6 +291,7 @@
       height: 100%;
       background: rgba(0,0,0,0.7);
       z-index: 2000;
+      backdrop-filter: blur(5px);
     }
     .modal-content {
       position: absolute;
@@ -210,6 +304,12 @@
       width: 90%;
       max-width: 400px;
       border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      animation: modalFadeIn 0.3s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translate(-50%, -48%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
     }
     .modal h3 {
       margin-top: 0;
@@ -223,10 +323,114 @@
       background: var(--bg-soft);
       color: var(--text);
       margin-bottom: 15px;
+      transition: var(--transition);
+    }
+    .modal input:focus{
+      outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-glow);
     }
     .modal label {
       display: block;
       margin-bottom: 5px;
+      color: var(--muted);
+    }
+
+    /* Notification System */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 350px;
+      transform: translateX(400px);
+      transition: transform 0.4s ease;
+    }
+    .notification.show {
+      transform: translateX(0);
+    }
+    .notification i {
+      font-size: 20px;
+    }
+    .notification.success i { color: var(--ok); }
+    .notification.warning i { color: var(--warn); }
+    .notification.error i { color: var(--risk); }
+    .notification.info i { color: var(--brand); }
+
+    /* Dashboard Toggle */
+    .dashboard-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: var(--brand);
+      color: #001518;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .dashboard-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    /* Dashboard Panel */
+    .dashboard-panel {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 300px;
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+      transform: translateY(100%);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .dashboard-panel.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .dashboard-panel h4 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .stat {
+      background: var(--bg-soft);
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 12px;
       color: var(--muted);
     }
 
@@ -237,6 +441,97 @@
       .grid-3{grid-template-columns:1fr}
       .grid-2{grid-template-columns:1fr}
       .cta{flex-direction:column; align-items:flex-start}
+      .dashboard-panel {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+      }
+    }
+
+    /* Advanced Map Controls */
+    .map-controls {
+      position: absolute;
+      top: 70px;
+      right: 16px;
+      z-index: 400;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .map-control {
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text);
+    }
+    .map-control:hover {
+      background: var(--card-hover);
+      border-color: var(--stroke-light);
+    }
+
+    /* Risk Timeline */
+    .timeline-container {
+      margin-top: 20px;
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 15px;
+    }
+    .timeline {
+      display: flex;
+      height: 8px;
+      background: var(--bg-soft);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .timeline-segment {
+      height: 100%;
+      transition: var(--transition);
+    }
+    .timeline-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Predictive Analytics Panel */
+    .predictive-panel {
+      position: absolute;
+      top: 70px;
+      left: 16px;
+      width: 300px;
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 15px;
+      box-shadow: var(--shadow);
+      z-index: 400;
+      display: none;
+    }
+    .predictive-panel h4 {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .prediction-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--stroke);
+    }
+    .prediction-item:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
@@ -244,7 +539,7 @@
   <!-- Login Modal -->
   <div id="loginModal" class="modal">
     <div class="modal-content">
-      <h3>Login to SEIS AI</h3>
+      <h3><i class="fas fa-sign-in-alt"></i> Login to SEIS AI</h3>
       <form id="loginForm">
         <div>
           <label for="loginEmail">Email</label>
@@ -265,7 +560,7 @@
   <!-- Register Modal -->
   <div id="registerModal" class="modal">
     <div class="modal-content">
-      <h3>Create an Account</h3>
+      <h3><i class="fas fa-user-plus"></i> Create an Account</h3>
       <form id="registerForm">
         <div>
           <label for="registerName">Full Name</label>
@@ -295,15 +590,17 @@
   <header class="nav" aria-label="Primary">
     <div class="nav-inner">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <div class="logo" aria-hidden="true">
+          <i class="fas fa-mountain"></i>
+        </div>
         <h1 aria-label="SEIS AI">SEIS AI</h1>
       </div>
       <nav class="nav-links" aria-label="Site">
-        <a href="#map-section">Live Map</a>
-        <a href="#features">How it works</a>
-        <a href="#proof">Case Studies</a>
-        <a href="#" id="logoutBtn" style="display: none;">Logout</a>
-        <a href="#contact" class="btn btn-primary">Book a demo</a>
+        <a href="#map-section"><i class="fas fa-map-marked-alt"></i> Live Map</a>
+        <a href="#features"><i class="fas fa-cogs"></i> How it works</a>
+        <a href="#proof"><i class="fas fa-chart-line"></i> Case Studies</a>
+        <a href="#" id="logoutBtn" style="display: none;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <a href="#contact" class="btn btn-primary"><i class="fas fa-calendar-alt"></i> Book a demo</a>
       </nav>
     </div>
   </header>
@@ -311,12 +608,13 @@
   <!-- Hero -->
   <section class="hero">
     <div class="hero-inner">
-      <span class="eyebrow">AI for open‑pit stability</span>
+      <span class="eyebrow"><i class="fas fa-robot"></i> AI for open‑pit stability</span>
       <h2>Predict rockfalls before they happen. Protect people, assets, and production.</h2>
       <p>SEIS AI fuses slope monitoring, weather, blasting, and geotechnical data to forecast rockfall risk hours to days ahead, with realtime alerts and a live risk map for every pit, bench, and ramp.</p>
       <div class="hero-ctas">
-        <a href="#map-section" class="btn btn-primary">See live map</a>
-        <a href="#features" class="btn">How it works</a>
+        <a href="#map-section" class="btn btn-primary"><i class="fas fa-map-marked-alt"></i> See live map</a>
+        <a href="#features" class="btn"><i class="fas fa-play-circle"></i> Watch demo</a>
+        <a href="#" class="btn"><i class="fas fa-file-download"></i> Download whitepaper</a>
       </div>
       <div class="trust">
         <span class="dot" aria-hidden="true"></span>
@@ -325,19 +623,19 @@
 
       <div class="hero-cards" role="list">
         <div class="card" role="listitem">
-          <div class="badge">False alerts ↓</div>
+          <div class="badge"><i class="fas fa-bullseye"></i> False alerts ↓</div>
           <h3>Precision you can trust</h3>
           <div class="metric ok">−43% nuisance alarms</div>
           <p class="muted">Signal fusion + adaptive thresholds reduce fatigue without missing critical events.</p>
         </div>
         <div class="card" role="listitem">
-          <div class="badge">Time to act</div>
+          <div class="badge"><i class="fas fa-clock"></i> Time to act</div>
           <h3>Early warning window</h3>
           <div class="metric warn">2–24 hr look‑ahead</div>
           <p class="muted">Scenario forecasts flag rising risk days before slope movement accelerates.</p>
         </div>
         <div class="card" role="listitem">
-          <div class="badge">Safety outcomes</div>
+          <div class="badge"><i class="fas fa-shield-alt"></i> Safety outcomes</div>
           <h3>Reduced exposure</h3>
           <div class="metric risk">0 lost‑time injuries</div>
           <p class="muted">Automated exclusion zones and shift planning minimize time in harm's way.</p>
@@ -348,16 +646,16 @@
 
   <!-- Map -->
   <section id="map-section" class="section" aria-labelledby="map-title">
-    <h3 id="map-title">Global open‑pit risk map</h3>
+    <h3 id="map-title"><i class="fas fa-globe-americas"></i> Global open‑pit risk map</h3>
     <p>Explore open‑pit mines worldwide. Filter by region and live risk. Click a site for detail, telemetry freshness, and last alert.</p>
 
     <div class="map-wrap">
       <div class="map-toolbar">
         <div class="filters" role="group" aria-label="Risk filters">
-          <label class="chip"><input type="checkbox" id="f-ok" checked> Low</label>
-          <label class="chip"><input type="checkbox" id="f-warn" checked> Medium</label>
-          <label class="chip"><input type="checkbox" id="f-risk" checked> High</label>
-          <label class="chip"><input type="checkbox" id="f-unknown" checked> Unknown</label>
+          <label class="chip"><input type="checkbox" id="f-ok" checked> <i class="fas fa-circle" style="color:var(--ok)"></i> Low</label>
+          <label class="chip"><input type="checkbox" id="f-warn" checked> <i class="fas fa-circle" style="color:var(--warn)"></i> Medium</label>
+          <label class="chip"><input type="checkbox" id="f-risk" checked> <i class="fas fa-circle" style="color:var(--risk)"></i> High</label>
+          <label class="chip"><input type="checkbox" id="f-unknown" checked> <i class="fas fa-circle" style="color:#8092a6"></i> Unknown</label>
           <select id="region" class="select" aria-label="Region">
             <option value="all" selected>All regions</option>
             <option value="africa">Africa</option>
@@ -371,19 +669,53 @@
         <div class="filters">
           <button id="refreshData" class="btn">
             <span class="spinner" id="refreshSpinner" style="display:none"></span>
-            <span id="refreshText">Refresh data</span>
+            <span id="refreshText"><i class="fas fa-sync-alt"></i> Refresh data</span>
           </button>
-          <button id="fitAll" class="btn">Fit to results</button>
-          <a href="#contact" class="btn btn-primary">Request site onboarding</a>
+          <button id="fitAll" class="btn"><i class="fas fa-expand-arrows-alt"></i> Fit to results</button>
+          <a href="#contact" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Request site onboarding</a>
         </div>
       </div>
 
       <div style="position:relative">
         <div id="map" role="application" aria-label="Interactive map of open‑pit mines"></div>
 
+        <!-- Map Controls -->
+        <div class="map-controls">
+          <div class="map-control" id="togglePredictive" title="Predictive Analytics">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="map-control" id="toggleHeatmap" title="Heatmap View">
+            <i class="fas fa-fire"></i>
+          </div>
+          <div class="map-control" id="toggleSatellite" title="Satellite View">
+            <i class="fas fa-satellite"></i>
+          </div>
+        </div>
+
+        <!-- Predictive Analytics Panel -->
+        <div class="predictive-panel" id="predictivePanel">
+          <h4><i class="fas fa-brain"></i> Predictive Analytics</h4>
+          <div class="prediction-item">
+            <span>Next 6h risk forecast</span>
+            <span style="color:var(--warn)">+12%</span>
+          </div>
+          <div class="prediction-item">
+            <span>Weather impact</span>
+            <span style="color:var(--risk)">High</span>
+          </div>
+          <div class="prediction-item">
+            <span>Recommended action</span>
+            <span style="color:var(--ok)">Monitor</span>
+          </div>
+          <div class="prediction-item">
+            <span>Confidence level</span>
+            <span style="color:var(--ok)">87%</span>
+          </div>
+        </div>
+
         <!-- Legend -->
         <div class="legend" aria-live="polite">
-          <div><strong>Legend</strong></div>
+          <div><strong><i class="fas fa-map"></i> Legend</strong></div>
           <div class="row"><span class="dot ok"></span> Low</div>
           <div class="row"><span class="dot warn"></span> Medium</div>
           <div class="row"><span class="dot risk"></span> High</div>
@@ -397,6 +729,20 @@
           <div class="risk-chart-container">
             <canvas id="risk-chart" class="risk-chart"></canvas>
           </div>
+          <!-- Risk Timeline -->
+          <div class="timeline-container">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span>Risk Timeline</span>
+              <small>Last 7 days</small>
+            </div>
+            <div class="timeline" id="risk-timeline">
+              <!-- Timeline segments will be added dynamically -->
+            </div>
+            <div class="timeline-labels">
+              <span>7d ago</span>
+              <span>Now</span>
+            </div>
+          </div>
           <small id="panel-note"></small>
         </aside>
       </div>
@@ -406,20 +752,20 @@
 
   <!-- Features -->
   <section id="features" class="section" aria-labelledby="feat-title">
-    <h3 id="feat-title">How SEIS AI works</h3>
+    <h3 id="feat-title"><i class="fas fa-cogs"></i> How SEIS AI works</h3>
     <div class="grid-3">
       <div class="feature">
-        <div class="badge">Signal fusion</div>
+        <div class="badge"><i class="fas fa-wave-square"></i> Signal fusion</div>
         <h4>All signals, one model</h4>
         <p>Integrates slope radars, prisms, LiDAR, blasting logs, rainfall, seismic, temperature, and production plans. Each mine gets a calibrated model.</p>
       </div>
       <div class="feature">
-        <div class="badge">Forecasting</div>
+        <div class="badge"><i class="fas fa-clock"></i> Forecasting</div>
         <h4>Short‑term risk forecasts</h4>
         <p>Nowcasts every 60s and generates 2–24 hr risk scenarios with confidence intervals and automatic thresholding for each bench.</p>
       </div>
       <div class="feature">
-        <div class="badge">Actioning</div>
+        <div class="badge"><i class="fas fa-bell"></i> Actioning</div>
         <h4>Alerts that trigger action</h4>
         <p>Push alerts to radio, SMS, email, and dispatch. Auto‑creates exclusion zones and recommends haul ramp reroutes and shift changes.</p>
       </div>
@@ -428,7 +774,7 @@
 
   <!-- Proof -->
   <section id="proof" class="section" aria-labelledby="proof-title">
-    <h3 id="proof-title">Field‑proven outcomes</h3>
+    <h3 id="proof-title"><i class="fas fa-chart-line"></i> Field‑proven outcomes</h3>
     <div class="grid-2">
       <div class="quote">
         <blockquote>“The system flagged a wall instability 9 hours early. We cleared the ramp, avoided equipment damage, and lost zero hours.”</blockquote>
@@ -444,28 +790,61 @@
   <!-- CTA band -->
   <section id="contact" class="cta" aria-labelledby="cta-title">
     <div>
-      <h4 id="cta-title">Bring SEIS AI to your site</h4>
+      <h4 id="cta-title"><i class="fas fa-rocket"></i> Bring SEIS AI to your site</h4>
       <p>We'll connect to your monitoring stack and deploy a calibrated model in days, not months.</p>
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap">
-      <a class="btn btn-primary" href="mailto:hello@seis.ai?subject=SEIS%20AI%20Demo">Book a demo</a>
-      <a class="btn" href="#">Download one‑pager</a>
+      <a class="btn btn-primary" href="mailto:hello@seis.ai?subject=SEIS%20AI%20Demo"><i class="fas fa-calendar-alt"></i> Book a demo</a>
+      <a class="btn" href="#"><i class="fas fa-file-download"></i> Download one‑pager</a>
     </div>
   </section>
 
   <footer>
     <div class="foot">
       <div style="display:flex; align-items:center; gap:10px">
-        <div class="logo" aria-hidden="true" style="width:26px; height:26px"></div>
+        <div class="logo" aria-hidden="true" style="width:26px; height:26px">
+          <i class="fas fa-mountain"></i>
+        </div>
         <span>© SEIS AI</span>
       </div>
       <div style="display:flex; gap:14px">
-        <a href="#">Privacy</a>
-        <a href="#">Security</a>
-        <a href="#">Status</a>
+        <a href="#"><i class="fas fa-shield-alt"></i> Privacy</a>
+        <a href="#"><i class="fas fa-lock"></i> Security</a>
+        <a href="#"><i class="fas fa-signal"></i> Status</a>
       </div>
     </div>
   </footer>
+
+  <!-- Dashboard Toggle -->
+  <div class="dashboard-toggle" id="dashboardToggle">
+    <i class="fas fa-tachometer-alt"></i>
+  </div>
+
+  <!-- Dashboard Panel -->
+  <div class="dashboard-panel" id="dashboardPanel">
+    <h4><i class="fas fa-tachometer-alt"></i> System Dashboard</h4>
+    <div class="dashboard-stats">
+      <div class="stat">
+        <div class="stat-value" id="totalMines">12</div>
+        <div class="stat-label">Active Mines</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="highRisk">3</div>
+        <div class="stat-label">High Risk</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="avgResponse">2.4s</div>
+        <div class="stat-label">Avg Response</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="systemHealth">99.8%</div>
+        <div class="stat-label">System Health</div>
+      </div>
+    </div>
+    <div style="margin-top: 15px;">
+      <button class="btn" style="width: 100%;"><i class="fas fa-cog"></i> System Settings</button>
+    </div>
+  </div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
@@ -474,6 +853,9 @@
     // Authentication state
     let authToken = null;
     let currentUser = null;
+    let isDashboardOpen = false;
+    let isPredictiveOpen = false;
+    let isSatelliteView = false;
 
     // Color by risk
     const riskColor = (risk) => ({
@@ -485,18 +867,18 @@
 
     // Enhanced sample dataset with more realistic data
     const mines = [
-      {id:"mx-copper-1", name:"Buenavista del Cobre", company:"Grupo México", commodity:"Cu", region:"north-america", risk:"medium", lat:30.041, lng:-110.985, lastAlertISO:"2025-09-09T11:05:00Z", telemetryMins:3, riskHistory: [15, 18, 22, 35, 42, 38, 45]},
-      {id:"cl-copper-1", name:"Chuquicamata", company:"Codelco", commodity:"Cu", region:"south-america", risk:"low", lat:-22.33, lng:-68.93, lastAlertISO:"2025-09-13T14:02:00Z", telemetryMins:1, riskHistory: [8, 12, 10, 15, 18, 20, 22]},
-      {id:"au-gold-1", name:"Fimiston (Super Pit)", company:"KCGM", commodity:"Au", region:"oceania", risk:"high", lat:-30.75, lng:121.49, lastAlertISO:"2025-09-13T08:20:00Z", telemetryMins:7, riskHistory: [35, 42, 55, 68, 72, 78, 85]},
-      {id:"za-plat-1", name:"Mogalakwena", company:"Anglo American", commodity:"PGM", region:"africa", risk:"low", lat:-23.53, lng:28.98, lastAlertISO:"2025-09-12T22:12:00Z", telemetryMins:4, riskHistory: [10, 12, 8, 15, 12, 10, 8]},
-      {id:"cn-iron-1", name:"Anshan Open Pit", company:"Ansteel", commodity:"Fe", region:"asia", risk:"medium", lat:41.1, lng:123.0, lastAlertISO:"2025-09-13T09:44:00Z", telemetryMins:2, riskHistory: [25, 30, 28, 32, 38, 35, 40]},
-      {id:"in-lime-1", name:"Kasipalayam Pit", company:"TN Lime Ltd", commodity:"Limestone", region:"asia", risk:"unknown", lat:12.739, lng:80.003, lastAlertISO:null, telemetryMins:null, riskHistory: []},
-      {id:"se-iron-1", name:"Aitik", company:"Boliden", commodity:"Cu/Au", region:"europe", risk:"low", lat:67.077, lng:20.95, lastAlertISO:"2025-09-13T12:05:00Z", telemetryMins:5, riskHistory: [12, 15, 18, 20, 15, 12, 10]},
-      {id:"us-gold-1", name:"Bingham Canyon", company:"Rio Tinto", commodity:"Cu/Au", region:"north-america", risk:"medium", lat:40.536, lng:-112.151, lastAlertISO:"2025-09-13T13:40:00Z", telemetryMins:2, riskHistory: [28, 32, 35, 40, 38, 42, 45]},
-      {id:"id-copper-1", name:"Grasberg Open Pit", company:"Freeport", commodity:"Cu/Au", region:"asia", risk:"high", lat:-4.06, lng:137.11, lastAlertISO:"2025-09-11T06:55:00Z", telemetryMins:15, riskHistory: [45, 50, 55, 62, 68, 72, 78]},
-      {id:"au-iron-1", name:"Mt Whaleback", company:"BHP", commodity:"Fe", region:"oceania", risk:"low", lat:-23.35, lng:119.73, lastAlertISO:"2025-09-13T10:10:00Z", telemetryMins:3, riskHistory: [15, 12, 10, 8, 12, 15, 18]},
-      {id:"pe-copper-1", name:"Cerro Verde", company:"Freeport", commodity:"Cu", region:"south-america", risk:"medium", lat:-16.55, lng:-71.57, lastAlertISO:"2025-09-13T10:31:00Z", telemetryMins:2, riskHistory: [25, 30, 28, 32, 35, 38, 40]},
-      {id:"ca-diam-1", name:"Diavik Pit", company:"Rio Tinto", commodity:"Diamonds", region:"north-america", risk:"unknown", lat:64.499, lng:-110.279, lastAlertISO:null, telemetryMins:null, riskHistory: []}
+      {id:"mx-copper-1", name:"Buenavista del Cobre", company:"Grupo México", commodity:"Cu", region:"north-america", risk:"medium", lat:30.041, lng:-110.985, lastAlertISO:"2025-09-09T11:05:00Z", telemetryMins:3, riskHistory: [15, 18, 22, 35, 42, 38, 45], riskTimeline: ["low", "low", "medium", "medium", "medium", "medium", "medium"]},
+      {id:"cl-copper-1", name:"Chuquicamata", company:"Codelco", commodity:"Cu", region:"south-america", risk:"low", lat:-22.33, lng:-68.93, lastAlertISO:"2025-09-13T14:02:00Z", telemetryMins:1, riskHistory: [8, 12, 10, 15, 18, 20, 22], riskTimeline: ["low", "low", "low", "low", "low", "low", "low"]},
+      {id:"au-gold-1", name:"Fimiston (Super Pit)", company:"KCGM", commodity:"Au", region:"oceania", risk:"high", lat:-30.75, lng:121.49, lastAlertISO:"2025-09-13T08:20:00Z", telemetryMins:7, riskHistory: [35, 42, 55, 68, 72, 78, 85], riskTimeline: ["medium", "medium", "high", "high", "high", "high", "high"]},
+      {id:"za-plat-1", name:"Mogalakwena", company:"Anglo American", commodity:"PGM", region:"africa", risk:"low", lat:-23.53, lng:28.98, lastAlertISO:"2025-09-12T22:12:00Z", telemetryMins:4, riskHistory: [10, 12, 8, 15, 12, 10, 8], riskTimeline: ["low", "low", "low", "low", "low", "low", "low"]},
+      {id:"cn-iron-1", name:"Anshan Open Pit", company:"Ansteel", commodity:"Fe", region:"asia", risk:"medium", lat:41.1, lng:123.0, lastAlertISO:"2025-09-13T09:44:00Z", telemetryMins:2, riskHistory: [25, 30, 28, 32, 38, 35, 40], riskTimeline: ["medium", "medium", "medium", "medium", "medium", "medium", "medium"]},
+      {id:"in-lime-1", name:"Kasipalayam Pit", company:"TN Lime Ltd", commodity:"Limestone", region:"asia", risk:"unknown", lat:12.739, lng:80.003, lastAlertISO:null, telemetryMins:null, riskHistory: [], riskTimeline: []},
+      {id:"se-iron-1", name:"Aitik", company:"Boliden", commodity:"Cu/Au", region:"europe", risk:"low", lat:67.077, lng:20.95, lastAlertISO:"2025-09-13T12:05:00Z", telemetryMins:5, riskHistory: [12, 15, 18, 20, 15, 12, 10], riskTimeline: ["low", "low", "low", "low", "low", "low", "low"]},
+      {id:"us-gold-1", name:"Bingham Canyon", company:"Rio Tinto", commodity:"Cu/Au", region:"north-america", risk:"medium", lat:40.536, lng:-112.151, lastAlertISO:"2025-09-13T13:40:00Z", telemetryMins:2, riskHistory: [28, 32, 35, 40, 38, 42, 45], riskTimeline: ["medium", "medium", "medium", "medium", "medium", "medium", "medium"]},
+      {id:"id-copper-1", name:"Grasberg Open Pit", company:"Freeport", commodity:"Cu/Au", region:"asia", risk:"high", lat:-4.06, lng:137.11, lastAlertISO:"2025-09-11T06:55:00Z", telemetryMins:15, riskHistory: [45, 50, 55, 62, 68, 72, 78], riskTimeline: ["medium", "medium", "high", "high", "high", "high", "high"]},
+      {id:"au-iron-1", name:"Mt Whaleback", company:"BHP", commodity:"Fe", region:"oceania", risk:"low", lat:-23.35, lng:119.73, lastAlertISO:"2025-09-13T10:10:00Z", telemetryMins:3, riskHistory: [15, 12, 10, 8, 12, 15, 18], riskTimeline: ["low", "low", "low", "low", "low", "low", "low"]},
+      {id:"pe-copper-1", name:"Cerro Verde", company:"Freeport", commodity:"Cu", region:"south-america", risk:"medium", lat:-16.55, lng:-71.57, lastAlertISO:"2025-09-13T10:31:00Z", telemetryMins:2, riskHistory: [25, 30, 28, 32, 35, 38, 40], riskTimeline: ["medium", "medium", "medium", "medium", "medium", "medium", "medium"]},
+      {id:"ca-diam-1", name:"Diavik Pit", company:"Rio Tinto", commodity:"Diamonds", region:"north-america", risk:"unknown", lat:64.499, lng:-110.279, lastAlertISO:null, telemetryMins:null, riskHistory: [], riskTimeline: []}
     ];
 
     // Risk chart instance
@@ -511,10 +893,15 @@
 
     L.control.zoom({ position:'topright' }).addTo(map);
 
-    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    let tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
+
+    // Satellite tiles
+    const satelliteTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
 
     // Marker factory
     function circleMarker(m){
@@ -531,6 +918,30 @@
     // State
     const markers = [];
     const group = L.featureGroup().addTo(map);
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.add('show');
+      }, 100);
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 400);
+      }, 5000);
+    }
 
     // Show login modal
     function showLoginModal() {
@@ -607,6 +1018,7 @@
       localStorage.removeItem('user');
       document.getElementById('logoutBtn').style.display = 'none';
       showLoginModal();
+      showNotification('You have been logged out', 'info');
     }
 
     // Check if user is logged in on page load
@@ -619,6 +1031,7 @@
         currentUser = JSON.parse(savedUser);
         document.getElementById('logoutBtn').style.display = 'block';
         loadMineData();
+        showNotification(`Welcome back, ${currentUser.name}`, 'success');
       } else {
         // Show login modal
         showLoginModal();
@@ -712,6 +1125,22 @@
       }
     }
 
+    // Update risk timeline
+    function updateRiskTimeline(mine) {
+      const timeline = document.getElementById('risk-timeline');
+      timeline.innerHTML = '';
+      
+      if (mine.riskTimeline && mine.riskTimeline.length > 0) {
+        mine.riskTimeline.forEach(risk => {
+          const segment = document.createElement('div');
+          segment.className = 'timeline-segment';
+          segment.style.backgroundColor = riskColor(risk);
+          segment.style.flex = '1';
+          timeline.appendChild(segment);
+        });
+      }
+    }
+
     // Generate panel HTML
     function panelHtml(m){
       const riskLabel = m.risk.charAt(0).toUpperCase() + m.risk.slice(1);
@@ -760,6 +1189,10 @@
         return passRisk && passRegion;
       });
 
+      // Update dashboard stats
+      document.getElementById('totalMines').textContent = filtered.length;
+      document.getElementById('highRisk').textContent = filtered.filter(m => m.risk === 'high').length;
+
       filtered.forEach(m=>{
         const mk = circleMarker(m).addTo(group);
         mk.on('click', ()=>{
@@ -770,6 +1203,7 @@
           title.textContent = m.name;
           body.innerHTML = panelHtml(m);
           updateRiskChart(m);
+          updateRiskTimeline(m);
           note.textContent = 'Live model demo. Contact us to connect your site for production.';
           panel.style.display = 'block';
         });
@@ -779,6 +1213,45 @@
 
       if(filtered.length===0){
         document.getElementById('panel').style.display='none';
+      }
+    }
+
+    // Toggle satellite view
+    function toggleSatelliteView() {
+      if (isSatelliteView) {
+        map.removeLayer(satelliteTiles);
+        tiles.addTo(map);
+        isSatelliteView = false;
+        showNotification('Switched to standard map view', 'info');
+      } else {
+        map.removeLayer(tiles);
+        satelliteTiles.addTo(map);
+        isSatelliteView = true;
+        showNotification('Switched to satellite view', 'info');
+      }
+    }
+
+    // Toggle predictive panel
+    function togglePredictivePanel() {
+      const panel = document.getElementById('predictivePanel');
+      if (isPredictiveOpen) {
+        panel.style.display = 'none';
+        isPredictiveOpen = false;
+      } else {
+        panel.style.display = 'block';
+        isPredictiveOpen = true;
+      }
+    }
+
+    // Toggle dashboard
+    function toggleDashboard() {
+      const panel = document.getElementById('dashboardPanel');
+      if (isDashboardOpen) {
+        panel.classList.remove('show');
+        isDashboardOpen = false;
+      } else {
+        panel.classList.add('show');
+        isDashboardOpen = true;
       }
     }
 
@@ -805,7 +1278,7 @@
         const text = document.getElementById('refreshText');
         
         spinner.style.display = 'inline-block';
-        text.textContent = 'Refreshing...';
+        text.innerHTML = '<i class="fas fa-sync-alt"></i> Refreshing...';
         this.disabled = true;
         
         // Simulate API call
@@ -813,27 +1286,17 @@
           console.log('Data refreshed from server');
           
           spinner.style.display = 'none';
-          text.textContent = 'Refresh data';
+          text.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh data';
           this.disabled = false;
           
-          // Show notification
-          const notification = document.createElement('div');
-          notification.textContent = 'Data updated successfully';
-          notification.style.position = 'fixed';
-          notification.style.bottom = '20px';
-          notification.style.right = '20px';
-          notification.style.background = 'var(--ok)';
-          notification.style.color = 'white';
-          notification.style.padding = '10px 15px';
-          notification.style.borderRadius = '5px';
-          notification.style.zIndex = '1000';
-          document.body.appendChild(notification);
-          
-          setTimeout(() => {
-            document.body.removeChild(notification);
-          }, 3000);
+          showNotification('Data updated successfully', 'success');
         }, 1500);
       });
+
+      // Map controls
+      document.getElementById('toggleSatellite').addEventListener('click', toggleSatelliteView);
+      document.getElementById('togglePredictive').addEventListener('click', togglePredictivePanel);
+      document.getElementById('dashboardToggle').addEventListener('click', toggleDashboard);
 
       // Helpful default view
       setTimeout(()=>{
@@ -842,11 +1305,19 @@
       }, 300);
 
       // Close panel on map click
-      map.on('click', ()=>{ document.getElementById('panel').style.display='none'; });
+      map.on('click', ()=>{ 
+        document.getElementById('panel').style.display='none'; 
+        document.getElementById('predictivePanel').style.display = 'none';
+        isPredictiveOpen = false;
+      });
 
       // Keyboard focus styles for accessibility
       document.addEventListener('keydown', e=>{
-        if(e.key==='Escape'){ document.getElementById('panel').style.display='none'; }
+        if(e.key==='Escape'){ 
+          document.getElementById('panel').style.display='none'; 
+          document.getElementById('predictivePanel').style.display = 'none';
+          isPredictiveOpen = false;
+        }
       });
 
       // Login form submission
@@ -860,8 +1331,9 @@
           hideLoginModal();
           document.getElementById('logoutBtn').style.display = 'block';
           loadMineData();
+          showNotification('Login successful!', 'success');
         } else {
-          alert('Login failed. Please check your credentials.');
+          showNotification('Login failed. Please check your credentials.', 'error');
         }
       });
 
@@ -878,8 +1350,9 @@
           hideRegisterModal();
           document.getElementById('logoutBtn').style.display = 'block';
           loadMineData();
+          showNotification('Registration successful!', 'success');
         } else {
-          alert('Registration failed. Please try again.');
+          showNotification('Registration failed. Please try again.', 'error');
         }
       });
 
@@ -901,6 +1374,49 @@
         e.preventDefault();
         logout();
       });
+
+      // Nav scroll effect
+      window.addEventListener('scroll', () => {
+        const nav = document.querySelector('.nav');
+        if (window.scrollY > 50) {
+          nav.classList.add('scrolled');
+        } else {
+          nav.classList.remove('scrolled');
+        }
+      });
+
+      // Simulate real-time updates
+      setInterval(() => {
+        // Randomly update a mine's status to simulate real-time changes
+        if (mines.length > 0) {
+          const randomIndex = Math.floor(Math.random() * mines.length);
+          const mine = mines[randomIndex];
+          
+          // Only update if not already high risk
+          if (mine.risk !== 'high') {
+            const previousRisk = mine.risk;
+            
+            // 10% chance to increase risk level
+            if (Math.random() < 0.1) {
+              if (mine.risk === 'low') {
+                mine.risk = 'medium';
+              } else if (mine.risk === 'medium') {
+                mine.risk = 'high';
+              }
+              
+              if (mine.risk !== previousRisk) {
+                // Update the map if the risk changed
+                applyFilters();
+                
+                // Show notification for high risk changes
+                if (mine.risk === 'high') {
+                  showNotification(`Risk level increased to HIGH at ${mine.name}`, 'warning');
+                }
+              }
+            }
+          }
+        }
+      }, 10000); // Update every 10 seconds
     }
 
     // Initialize the app when the DOM is fully loaded
