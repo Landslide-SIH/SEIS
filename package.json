@@ -5,19 +5,70 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "install-tf-deps": "npm install @tensorflow/tfjs",
+    "cluster": "node server.js --cluster",
+    "test": "jest",
+    "setup": "node scripts/setup.js"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
+    "canvas": "^3.2.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "csv-parser": "^3.2.0",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.1.0",
+    "express-validator": "^7.2.1",
+    "fs": "^0.0.1-security",
+    "fs-extra": "^11.3.2",
+    "geoip-lite": "^1.4.10",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.1",
+    "jpeg-js": "^0.4.4",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.15.0"
+    "lodash": "^4.17.21",
+    "mathjs": "^14.8.0",
+    "ml-kmeans": "^6.0.0",
+    "ml-pca": "^2.1.0",
+    "ml-random-forest": "^2.0.1",
+    "ml-regression": "^5.0.0",
+    "ml-svm": "^2.1.2",
+    "morgan": "^1.10.1",
+    "mysql2": "^3.15.1",
+    "node-cache": "^5.1.2",
+    "node-cron": "^3.0.3",
+    "pandas-js": "^0.2.4",
+    "path": "^0.12.7",
+    "redis": "^5.8.2",
+    "sharp": "^0.34.4",
+    "swagger-ui-express": "^5.0.1",
+    "useragent": "^2.3.0",
+    "util": "^0.12.5",
+    "uuid": "^13.0.0",
+    "ws": "^8.18.3",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.0.1"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "seismic",
+    "ai",
+    "rockfall",
+    "prediction",
+    "tensorflow",
+    "machine-learning"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }

@@ -1,0 +1,309 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // Helper function to update API status
+    function updateApiStatus(apiName, status) {
+        const apiList = document.querySelector('.api-list');
+        if (apiList) {
+            const li = Array.from(apiList.querySelectorAll('li')).find(item => item.textContent.startsWith(apiName + ':'));
+            if (li) {
+                li.textContent = `${apiName}: ${status}`;
+            }
+        }
+    }
+
+    // Helper function to add error to log
+    function addErrorToLog(message) {
+        const errorList = document.querySelector('.error-list');
+        if (errorList) {
+            const li = document.createElement('li');
+            li.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            errorList.appendChild(li);
+        }
+    }
+
+    // Save Configuration button
+    const saveConfigBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Save Configuration');
+    if (saveConfigBtn) {
+        saveConfigBtn.addEventListener('click', function() {
+            const usgsKey = document.querySelector('input[placeholder="Optional API key for accessing USGS earthquake data"]').value;
+            const weatherKey = document.querySelector('input[placeholder="Required API key for accessing weather data"]').value;
+            const geoKey = document.querySelector('input[placeholder="API key for accessing national geological survey data"]').value;
+            const satelliteKey = document.querySelector('input[placeholder="API key for accessing satellite and InSAR data"]').value;
+
+            localStorage.setItem('usgsKey', usgsKey);
+            localStorage.setItem('weatherKey', weatherKey);
+            localStorage.setItem('geoKey', geoKey);
+            localStorage.setItem('satelliteKey', satelliteKey);
+
+            alert('API configuration saved to local storage.');
+        });
+    }
+
+    // Connect to All APIs button
+    const connectAllBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Connect to All APIs');
+    if (connectAllBtn) {
+        connectAllBtn.addEventListener('click', function() {
+            // Simulate connecting by updating statuses; actual connections happen on data fetch
+            updateApiStatus('USGS API', 'Connecting...');
+            updateApiStatus('OpenWeatherMap API', 'Connecting...');
+            updateApiStatus('National Geological Survey API', 'Connecting...');
+            updateApiStatus('Satellite Data API', 'Connecting...');
+            updateApiStatus('Mine Sensor Network', 'Connecting...');
+            alert('Attempting to connect to all APIs. Fetch data to test connections.');
+        });
+    }
+
+    // Retry Failed Connections button
+    const retryBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Retry Failed Connections');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', function() {
+            alert('Retrying failed connections... (simulate by fetching data again)');
+        });
+    }
+
+    // Clear Error Log button
+    const clearLogBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Clear Error Log');
+    if (clearLogBtn) {
+        clearLogBtn.addEventListener('click', function() {
+            const errorList = document.querySelector('.error-list');
+            if (errorList) {
+                errorList.innerHTML = '';
+            }
+        });
+    }
+
+    // Get Seismic Data
+    const getSeismicBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Get Seismic Data');
+    if (getSeismicBtn) {
+        getSeismicBtn.addEventListener('click', function() {
+            updateApiStatus('USGS API', 'Connecting...');
+            const key = localStorage.getItem('usgsKey');
+            let url = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2025-08-26&endtime=2025-09-26&minmagnitude=2.5';
+            // USGS doesn't typically require a key, but append if provided (for custom setups)
+            if (key) {
+                url += '&api_key=' + key;
+            }
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to fetch seismic data');
+                    return res.json();
+                })
+                .then(data => {
+                    updateApiStatus('USGS API', 'Connected');
+                    const container = document.querySelector('#seismic-data .data-card');
+                    container.innerHTML = '<p>🌋 Loaded ' + data.features.length + ' seismic events.</p>';
+                    const ul = document.createElement('ul');
+                    data.features.slice(0, 10).forEach(feature => {  // Show first 10
+                        const li = document.createElement('li');
+                        li.textContent = `Magnitude ${feature.properties.mag} at ${feature.properties.place}`;
+                        ul.appendChild(li);
+                    });
+                    container.appendChild(ul);
+                })
+                .catch(err => {
+                    updateApiStatus('USGS API', 'Disconnected');
+                    addErrorToLog('Seismic Data: ' + err.message);
+                });
+        });
+    }
+
+    // Get Weather Data (assuming a default mine location: Chuquicamata, Chile)
+    const getWeatherBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Get Weather Data');
+    if (getWeatherBtn) {
+        getWeatherBtn.addEventListener('click', function() {
+            updateApiStatus('OpenWeatherMap API', 'Connecting...');
+            const key = localStorage.getItem('weatherKey');
+            if (!key) {
+                addErrorToLog('Weather Data: API key required');
+                return;
+            }
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=-22.32&lon=-68.93&appid=${key}&units=metric`;
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to fetch weather data');
+                    return res.json();
+                })
+                .then(data => {
+                    updateApiStatus('OpenWeatherMap API', 'Connected');
+                    const p = document.querySelector('#weather-data .data-card p');
+                    p.innerHTML = '🌤️ Weather at Chuquicamata: ' + data.main.temp + '°C, ' + data.weather[0].description;
+                })
+                .catch(err => {
+                    updateApiStatus('OpenWeatherMap API', 'Disconnected');
+                    addErrorToLog('Weather Data: ' + err.message);
+                });
+        });
+    }
+
+    // Get Geological Data (placeholder, as specific API not defined; assume a sample endpoint)
+    const getGeoBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Get Geological Data');
+    if (getGeoBtn) {
+        getGeoBtn.addEventListener('click', function() {
+            updateApiStatus('National Geological Survey API', 'Connecting...');
+            const key = localStorage.getItem('geoKey');
+            // Placeholder URL; replace with actual
+            const url = `https://example-geosurvey-api.com/data?api_key=${key || ''}`;
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to fetch geological data');
+                    return res.json();
+                })
+                .then(data => {
+                    updateApiStatus('National Geological Survey API', 'Connected');
+                    const p = document.querySelector('#geological-data .data-card p');
+                    p.textContent = '⛰️ Geological data loaded (placeholder response).';
+                })
+                .catch(err => {
+                    updateApiStatus('National Geological Survey API', 'Disconnected');
+                    addErrorToLog('Geological Data: ' + err.message);
+                });
+        });
+    }
+
+    // Get Satellite Data (placeholder)
+    const getSatelliteBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Get Satellite Data');
+    if (getSatelliteBtn) {
+        getSatelliteBtn.addEventListener('click', function() {
+            updateApiStatus('Satellite Data API', 'Connecting...');
+            const key = localStorage.getItem('satelliteKey');
+            // Placeholder URL; replace with actual (e.g., Sentinel Hub or similar)
+            const url = `https://example-satellite-api.com/insar?api_key=${key || ''}`;
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to fetch satellite data');
+                    return res.json();
+                })
+                .then(data => {
+                    updateApiStatus('Satellite Data API', 'Connected');
+                    const insarP = document.querySelector('#satellite-data .tab-content.active p');
+                    insarP.textContent = '🛰️ Satellite data loaded (placeholder response).';
+                })
+                .catch(err => {
+                    updateApiStatus('Satellite Data API', 'Disconnected');
+                    addErrorToLog('Satellite Data: ' + err.message);
+                });
+        });
+    }
+
+    // Get Sensor Data (placeholder, assume internal endpoint)
+    const getSensorBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Get Sensor Data');
+    if (getSensorBtn) {
+        getSensorBtn.addEventListener('click', function() {
+            updateApiStatus('Mine Sensor Network', 'Connecting...');
+            // Placeholder internal URL
+            const url = '/api/sensor-data';  // Assume backend endpoint
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to fetch sensor data');
+                    return res.json();
+                })
+                .then(data => {
+                    updateApiStatus('Mine Sensor Network', 'Connected');
+                    const p = document.querySelector('#sensor-data .data-card p');
+                    p.textContent = '📊 Sensor data loaded (placeholder response).';
+                })
+                .catch(err => {
+                    updateApiStatus('Mine Sensor Network', 'Disconnected');
+                    addErrorToLog('Sensor Data: ' + err.message);
+                });
+        });
+    }
+
+    // Get Rockfall Data (placeholder)
+    const getRockfallBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Get Rockfall Data');
+    if (getRockfallBtn) {
+        getRockfallBtn.addEventListener('click', function() {
+            updateApiStatus('Rockfall Data', 'Loading...');
+            // Placeholder URL
+            const url = '/api/rockfall-data';
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to fetch rockfall data');
+                    return res.json();
+                })
+                .then(data => {
+                    updateApiStatus('Rockfall Data', 'Loaded');
+                    const p = document.querySelector('#rockfall-data .data-card p');
+                    p.textContent = '🪨 Rockfall data loaded (placeholder response).';
+                })
+                .catch(err => {
+                    updateApiStatus('Rockfall Data', 'Not Loaded');
+                    addErrorToLog('Rockfall Data: ' + err.message);
+                });
+        });
+    }
+
+    // Upload Rockfall Data
+    const previewBtn = document.getElementById('previewBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const confirmUploadBtn = document.getElementById('confirmUpload');
+    const cancelUploadBtn = document.getElementById('cancelUpload');
+    const csvFile = document.getElementById('csvFile');
+    const mineSelect = document.getElementById('mineSelect');
+    const dataPreviewTable = document.querySelector('#data-preview table');  // Assume table exists
+
+    if (previewBtn && csvFile) {
+        previewBtn.addEventListener('click', function() {
+            const file = csvFile.files[0];
+            if (!file) {
+                alert('Please select a CSV file.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(0, 11);  // First 10 rows + header
+                dataPreviewTable.innerHTML = '';
+                rows.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    row.split(',').forEach(cell => {
+                        const td = document.createElement(index === 0 ? 'th' : 'td');
+                        td.textContent = cell;
+                        tr.appendChild(td);
+                    });
+                    dataPreviewTable.appendChild(tr);
+                });
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function() {
+            const file = csvFile.files[0];
+            const mine = mineSelect.value;
+            if (!file || !mine) {
+                alert('Please select a mine and CSV file.');
+                return;
+            }
+            // Simulate upload (no backend, just log)
+            const formData = new FormData();
+            formData.append('mine', mine);
+            formData.append('csv', file);
+            // fetch('/api/upload-rockfall', { method: 'POST', body: formData }) ... 
+            console.log('Uploading rockfall data for mine:', mine);
+            alert('Upload simulated. Data logged to console.');
+            // Update progress bar (placeholder)
+            const progressBar = document.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.width = '100%';
+                setTimeout(() => progressBar.style.width = '0%', 2000);
+            }
+        });
+    }
+
+    if (confirmUploadBtn) {
+        confirmUploadBtn.addEventListener('click', function() {
+            alert('Upload confirmed (simulated).');
+            dataPreviewTable.innerHTML = '';
+        });
+    }
+
+    if (cancelUploadBtn) {
+        cancelUploadBtn.addEventListener('click', function() {
+            dataPreviewTable.innerHTML = '';
+            csvFile.value = '';
+        });
+    }
+
+    // Additional features like preferences save can be added similarly
+});

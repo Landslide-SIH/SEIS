@@ -1,12 +1,10 @@
 CREATE TABLE IF NOT EXISTS mines (
     id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    company VARCHAR(100),
-    commodity VARCHAR(50),
-    region VARCHAR(50),
-    lat DECIMAL(10, 6),
-    lng DECIMAL(10, 6),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    name VARCHAR(255),
+    company VARCHAR(255),
+    latitude DOUBLE NULL,
+    longitude DOUBLE NULL,
+    location VARCHAR(255) NULL, -- optional textual location or geo JSON
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
